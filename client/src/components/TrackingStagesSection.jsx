@@ -14,7 +14,7 @@ const STAGE_META = [
 
 export default function TrackingStagesSection() {
   return (
-    <div style={{ maxWidth: 1180, margin: "0 auto", padding: "0 20px 60px" }}>
+    <div style={{ maxWidth: 1180, margin: "0 auto", padding: "20px 20px 60px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 26 }}>
         <Navigation size={16} color="var(--brand)" />
         <div className="font-display" style={{ fontSize: 13, fontWeight: 700, letterSpacing: ".08em", color: "var(--muted)" }}>
