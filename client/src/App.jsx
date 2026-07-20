@@ -12,6 +12,7 @@ import {
   Tooltip, PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area
 } from "recharts";
 import * as XLSX from "xlsx";
+import JsBarcode from "jsbarcode";
 import TrackingStagesSection from "./components/TrackingStagesSection.jsx";
 import ServicePlaces from "./components/ServicePlaces.jsx";
 import ServicePlacesAdmin from "./components/ServicePlacesAdmin.jsx";
@@ -202,17 +203,20 @@ function GlobalStyle() {
       @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
       :root{
-        --ink:#010203; --ink2:#060810; --panel:rgba(10,14,30,.68); --panel-solid:#080b1a; --panel2:#0e1229; --line:rgba(255,255,255,.065);
+        --ink:#060606; --ink2:#0d0d0d; --panel:rgba(17,17,17,.85); --panel-solid:#111111; --panel2:#161616; --line:#252525;
         --paper:#F4EFE3;
-        --navy:#16245c; --navy2:#0d1740;
-        --brand:#D4AF37; --brand-dim:#8a6a1c; --brand-glow:rgba(212,175,55,.5); --brand-soft:rgba(212,175,55,.14);
         --red:#E0233C; --red-dim:#8f1526; --red-glow:rgba(224,35,60,.5);
-        --green:#2ED492; --blue:#3D7BFA; --gold:#FFB020;
-        --muted:#8B93B3; --muted2:#4d5678; --text:#EEF1FB;
+        --green:#2ED492; --blue:#3D7BFA; --gold:#FFD700;
+        --muted:#BDBDBD; --muted2:#8a8a8a; --text:#FFFFFF;
         --font-display:'Space Grotesk',sans-serif; --font-body:'Inter',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+
+        /* Gold + Black Luxury Theme — the only theme */
+        --brand:#D4AF37; --brand-rgb:212,175,55; --brand-dim:#a3861f; --brand-glow:rgba(var(--brand-rgb),.5); --brand-soft:rgba(var(--brand-rgb),.14);
+        --navy:#3a2f10; --navy2:#1f1a08;
       }
+      .mcl-root, .mcl-root *{ transition: background-color .35s ease, border-color .35s ease, box-shadow .35s ease, color .25s ease; }
       html{ scroll-behavior:smooth; }
-      .mcl-root{ background:radial-gradient(ellipse 90% 60% at 50% -10%, #0c1330 0%, var(--ink) 55%); color:var(--text); font-family:var(--font-body); min-height:100vh; position:relative; overflow-x:hidden; }
+      .mcl-root{ background:radial-gradient(ellipse 90% 60% at 50% -10%, #120e04 0%, var(--ink) 55%); color:var(--text); font-family:var(--font-body); min-height:100vh; position:relative; overflow-x:hidden; }
       .mcl-root *{ box-sizing:border-box; }
       .font-display{ font-family:var(--font-display); }
       .font-mono{ font-family:var(--font-mono); letter-spacing:.02em; }
@@ -232,17 +236,27 @@ function GlobalStyle() {
       .content-layer{ position:relative; z-index:1; }
 
       .spotlight{ position:absolute; inset:0; pointer-events:none; opacity:.6;
-        background:radial-gradient(500px circle at var(--mx,50%) var(--my,20%), rgba(212,175,55,.14), transparent 60%); }
+        background:radial-gradient(500px circle at var(--mx,50%) var(--my,20%), rgba(var(--brand-rgb),.14), transparent 60%); }
+
+      .hero-bg-wrap{ position:relative; overflow:hidden; }
+      .hero-bg-wrap::before{ content:""; position:absolute; inset:0; z-index:0;
+        background:url('/PG.jpeg') center 32% / cover no-repeat; }
+      .hero-bg-overlay{ position:absolute; inset:0; z-index:0; pointer-events:none;
+        background:
+          linear-gradient(100deg, rgba(6,6,6,.96) 0%, rgba(6,6,6,.86) 30%, rgba(6,6,6,.5) 58%, rgba(6,6,6,.72) 100%),
+          linear-gradient(180deg, rgba(6,6,6,.15) 0%, rgba(6,6,6,.35) 70%, var(--ink) 100%); }
+      @media (max-width: 880px){ .hero-bg-wrap::before{ background-position:65% 32%; } .hero-bg-overlay{ background:
+          linear-gradient(180deg, rgba(6,6,6,.55) 0%, rgba(6,6,6,.75) 55%, var(--ink) 100%); } }
 
       .glass{ background:var(--panel); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border:1px solid var(--line); border-radius:18px; }
       .mcl-card{ background:var(--panel-solid); border:1px solid var(--line); border-radius:18px; box-shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 20px 40px -28px rgba(0,0,0,.6); transition:transform .4s cubic-bezier(.16,1,.3,1), border-color .3s ease, box-shadow .4s ease; }
       .mcl-card:hover{ box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 26px 50px -24px rgba(0,0,0,.65); }
       .mcl-card-2{ background:var(--panel2); border:1px solid var(--line); border-radius:16px; transition:border-color .3s ease, box-shadow .3s ease; }
-      .tilt:hover{ border-color:rgba(212,175,55,.4); box-shadow:0 18px 40px -18px rgba(212,175,55,.35); }
+      .tilt:hover{ border-color:rgba(var(--brand-rgb),.4); box-shadow:0 18px 40px -18px rgba(var(--brand-rgb),.35); }
 
       .btn{ font-family:var(--font-body); font-weight:600; border-radius:12px; padding:11px 20px; display:inline-flex; align-items:center; gap:8px; cursor:pointer; border:1px solid transparent; transition:transform .22s cubic-bezier(.16,1,.3,1), background .3s ease, border-color .3s ease, box-shadow .3s ease; font-size:14px; }
       .btn:active{ transform:scale(.96); }
-      .btn-primary{ background:linear-gradient(135deg,var(--brand),#a8172c); color:#fff; box-shadow:0 8px 24px -10px var(--brand-glow); }
+      .btn-primary{ background:linear-gradient(135deg,var(--brand),var(--brand-dim)); color:#0b0d12; font-weight:700; box-shadow:0 8px 24px -10px var(--brand-glow); }
       .btn-primary:hover{ box-shadow:0 12px 30px -8px var(--brand-glow); transform:translateY(-2px); }
       .btn-ghost{ background:transparent; color:var(--text); border-color:var(--line); }
       .btn-ghost:hover{ border-color:var(--brand); color:var(--brand); }
@@ -252,7 +266,7 @@ function GlobalStyle() {
       .btn:disabled{ opacity:.45; cursor:not-allowed; }
 
       .in{ background:var(--ink2); border:1px solid var(--line); color:var(--text); border-radius:10px; padding:10px 12px; font-family:var(--font-body); font-size:14px; width:100%; outline:none; transition:border-color .25s ease, box-shadow .25s ease, background .25s ease; }
-      .in:focus{ border-color:var(--brand); box-shadow:0 0 0 3px rgba(212,175,55,.15); background:#0a0e1e; }
+      .in:focus{ border-color:var(--brand); box-shadow:0 0 0 3px rgba(var(--brand-rgb),.15); background:#0a0e1e; }
       .in::placeholder{ color:var(--muted2); }
       label.lb{ font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px; }
 
@@ -263,7 +277,7 @@ function GlobalStyle() {
       .route-rail-fill.is-rto{ background:linear-gradient(90deg,#5a1a22,#c73347); }
       .route-rail-truck{ position:absolute; top:50%; width:30px; height:30px; border-radius:999px; background:var(--brand); display:flex; align-items:center; justify-content:center; color:#fff;
         box-shadow:0 0 0 0 var(--brand-glow); transform:translate(-50%,-50%); animation:pulseTruck 2s ease-out infinite; transition:left .9s cubic-bezier(.16,1,.3,1); }
-      @keyframes pulseTruck{ 0%{ box-shadow:0 0 0 0 var(--brand-glow);} 70%{ box-shadow:0 0 0 14px rgba(212,175,55,0);} 100%{ box-shadow:0 0 0 0 rgba(212,175,55,0);} }
+      @keyframes pulseTruck{ 0%{ box-shadow:0 0 0 0 var(--brand-glow);} 70%{ box-shadow:0 0 0 14px rgba(var(--brand-rgb),0);} 100%{ box-shadow:0 0 0 0 rgba(var(--brand-rgb),0);} }
       .route-rail-nodes{ display:flex; justify-content:space-between; }
       .route-rail-node{ display:flex; flex-direction:column; align-items:center; gap:8px; flex:1; text-align:center; }
       .node-dot{ width:12px; height:12px; border-radius:999px; background:var(--panel-solid); border:2px solid var(--muted2); display:block; transition:all .3s ease; }
@@ -303,16 +317,16 @@ function GlobalStyle() {
       table.mcl-table th{ text-align:left; padding:10px 12px; color:var(--muted); font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.05em; border-bottom:1px solid var(--line); white-space:nowrap; }
       table.mcl-table td{ padding:12px; border-bottom:1px solid var(--line); vertical-align:middle; }
       table.mcl-table tr{ transition:background .2s ease; }
-      table.mcl-table tr:hover td{ background:rgba(212,175,55,.04); }
+      table.mcl-table tr:hover td{ background:rgba(var(--brand-rgb),.04); }
 
       .tab-btn{ padding:10px 16px; border-radius:11px; font-size:13.5px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px; color:var(--muted); border:1px solid transparent; transition:all .25s cubic-bezier(.16,1,.3,1); }
-      .tab-btn.active{ background:var(--panel2); color:var(--text); border-color:var(--line); box-shadow:inset 0 0 0 1px rgba(212,175,55,.25); }
+      .tab-btn.active{ background:var(--panel2); color:var(--text); border-color:var(--line); box-shadow:inset 0 0 0 1px rgba(var(--brand-rgb),.25); }
       .tab-btn:hover:not(.active){ color:var(--text); background:rgba(255,255,255,.03); }
 
       .logo-badge{ border-radius:12px; overflow:visible; display:flex; align-items:center; justify-content:center; position:relative; }
       .logo-badge img{ width:100%; height:100%; object-fit:contain; position:relative; z-index:1; image-rendering:-webkit-optimize-contrast; backface-visibility:hidden; transform:translateZ(0);
         filter:brightness(1.05) contrast(1.1) saturate(1.12) drop-shadow(0 2px 6px rgba(0,0,0,.5)); }
-      .logo-badge::before{ content:''; position:absolute; inset:-24%; background:radial-gradient(circle, rgba(212,175,55,.4), transparent 68%); border-radius:50%; filter:blur(2px); animation:logoGlow 4.5s ease-in-out infinite; z-index:0; }
+      .logo-badge::before{ content:''; position:absolute; inset:-10%; background:radial-gradient(circle, rgba(var(--brand-rgb),.4), transparent 68%); border-radius:50%; filter:blur(2px); animation:logoGlow 4.5s ease-in-out infinite; z-index:0; }
       @keyframes logoGlow{ 0%,100%{ opacity:.55; transform:scale(.94);} 50%{ opacity:1; transform:scale(1.05);} }
       .logo-badge-anim{ animation:logoFloat 5s ease-in-out infinite; }
       @keyframes logoFloat{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-5px);} }
@@ -324,12 +338,19 @@ function GlobalStyle() {
       .logo-hero{ position:relative; display:inline-flex; align-items:center; justify-content:center; animation:logoFloat 5s ease-in-out infinite; }
       .logo-hero img{ position:relative; z-index:1; image-rendering:-webkit-optimize-contrast; backface-visibility:hidden; transform:translateZ(0);
         filter:brightness(1.04) contrast(1.1) saturate(1.1) drop-shadow(0 4px 10px rgba(0,0,0,.5)); }
-      .logo-hero-ring{ position:absolute; inset:-16%; border-radius:50%; border:1px solid rgba(212,175,55,.22); animation:spin 30s linear infinite; }
-      .logo-hero-ring.r2{ inset:-28%; border-color:rgba(43,68,150,.28); animation-duration:40s; animation-direction:reverse; }
-      .logo-hero-glow{ position:absolute; inset:-30%; background:radial-gradient(circle, rgba(212,175,55,.46), transparent 65%); filter:blur(10px); animation:logoGlow 4.5s ease-in-out infinite; z-index:0; }
+      .logo-hero-ring{ position:absolute; inset:-1%; border-radius:24%; border:1px solid rgba(var(--brand-rgb),.22); animation:spin 10s linear infinite; }
+      .logo-hero-ring.r2{ inset:-5%; border-color:rgba(43,68,150,.28); animation-duration:10s; animation-direction:reverse; }
+      .logo-hero-ring{ position:absolute; inset:-1%; border-radius:24%; border:1px solid rgba(var(--brand-rgb),.22); animation:spin 10s linear infinite; }
+      .logo-hero-ring.r2{ inset:-5%; border-color:rgba(252, 253, 255, 0.28); animation-duration:10s; animation-direction:reverse; }
+      .logo-hero-glow{ position:absolute; inset:-1%; background:radial-gradient(circle, rgba(var(--brand-rgb),.46), transparent 65%); filter:blur(10px); animation:logoGlow 4.5s ease-in-out infinite; z-index:0; }
 
 
-      @media print{ .no-print{ display:none !important; } .print-only{ display:block !important; } body{ background:white; } }
+      @media print{
+        .no-print{ display:none !important; } .print-only{ display:block !important; }
+        html, body{ background:#fff !important; }
+        .mcl-root{ background:#fff !important; min-height:0 !important; }
+        .aurora, .grid-veil{ display:none !important; }
+      }
       .print-only{ display:none; }
 
       ::-webkit-scrollbar{ width:8px; height:8px; }
@@ -399,7 +420,7 @@ function StatusBadge({ status }) {
   const map = {
     "Booked": { c: "var(--muted)", bg: "rgba(140,151,179,.14)" },
     "Picked Up": { c: "var(--blue)", bg: "rgba(61,123,250,.14)" },
-    "In Transit": { c: "var(--brand)", bg: "rgba(212,175,55,.14)" },
+    "In Transit": { c: "var(--brand)", bg: "rgba(var(--brand-rgb),.14)" },
     "Out for Delivery": { c: "var(--gold)", bg: "rgba(255,176,32,.14)" },
     "Delivered": { c: "var(--green)", bg: "rgba(46,212,146,.14)" },
     "RTO": { c: "var(--red)", bg: "rgba(224,35,60,.14)" },
@@ -471,7 +492,7 @@ function Nav({ view, setView, adminLoggedIn, onLogout, syncing, lastSynced, onRe
   const secsAgo = lastSynced ? Math.max(0, Math.round((Date.now() - lastSynced.getTime()) / 1000)) : null;
 
   return (
-    <div className="no-print" style={{ position: "sticky", top: 0, zIndex: 40, background: "rgba(5,7,13,.78)", backdropFilter: "blur(14px)", borderBottom: "1px solid var(--line)" }}>
+    <div className="no-print" style={{ position: "sticky", top: 0, zIndex: 40, background: "rgba(6,6,6,.82)", backdropFilter: "blur(14px)", borderBottom: "1px solid var(--line)" }}>
       <div style={{ height: 3, background: "linear-gradient(90deg,var(--brand),var(--navy),var(--brand))", backgroundSize: "200% 100%", animation: "marquee 6s linear infinite" }} />
       <div style={{ maxWidth: 1180, margin: "0 auto", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div style={{ cursor: "pointer" }} onClick={() => setView("home")}><Logo size={76} /></div>
@@ -525,11 +546,13 @@ function HomeView({ setView, bookings }) {
 
   return (
     <div>
-      <div ref={heroRef} onMouseMove={onHeroMove} style={{ position: "relative", maxWidth: 1180, margin: "0 auto", padding: "64px 20px 40px" }}>
+      <div className="hero-bg-wrap">
+        <div className="hero-bg-overlay" />
+        <div ref={heroRef} onMouseMove={onHeroMove} style={{ position: "relative", maxWidth: 1180, margin: "0 auto", padding: "64px 20px 40px" }}>
         <div className="spotlight" />
         <div style={{ display: "grid", gridTemplateColumns: "1.15fr 0.85fr", gap: 48, alignItems: "center", position: "relative" }} className="hero-grid">
           <div className="glide-in">
-            <div style={{ marginBottom: 22 }}><HeroLogo size={168} /></div>
+            <div style={{ marginBottom: 22 }}><HeroLogo size={298} /></div>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 700, color: "var(--brand)", marginBottom: 18, letterSpacing: ".08em" }}>
               <Globe2 size={14} className="spin-slow" /> {COMPANY.scope.toUpperCase()}
             </div>
@@ -567,12 +590,13 @@ function HomeView({ setView, bookings }) {
             </div>
           </Tilt>
         </div>
+        </div>
       </div>
 
       <TrackingStagesSection />
 
       {recent.length > 0 && (
-        <div className="no-print" style={{ borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", padding: "12px 0", background: "rgba(212,175,55,.04)" }}>
+        <div className="no-print" style={{ borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", padding: "12px 0", background: "rgba(var(--brand-rgb),.04)" }}>
           <div className="marquee-wrap">
             <div className="marquee-track font-mono" style={{ fontSize: 12.5, color: "var(--muted)" }}>
               {[...recent, ...recent].map((b, i) => (
@@ -593,7 +617,7 @@ function HomeView({ setView, bookings }) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }} className="feature-grid">
           {features.map((f, i) => (
             <Tilt key={i} style={{ padding: 24, animationDelay: `${i * 0.07}s` }} className="glide-in">
-              <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(212,175,55,.14)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(var(--brand-rgb),.14)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
                 <f.icon size={18} color="var(--brand)" />
               </div>
               <div style={{ fontWeight: 700, fontSize: 15.5, marginBottom: 6 }}>{f.title}</div>
@@ -734,7 +758,7 @@ function TrackView({ bookings, onPrint }) {
           <button className="btn btn-primary" type="submit" style={{ marginTop: 10 }}><ListChecks size={16} /> Track all</button>
 
           {bulkResults && (
-            <div className="mcl-card-2" style={{ marginTop: 18, padding: 0, overflow: "hidden" }}>
+            <div className="mcl-card-2" style={{ marginTop: 18, padding: 0, overflow: "hidden", overflowX: "auto" }}>
               <table className="mcl-table">
                 <thead><tr><th>AWB</th><th>Route</th><th>Status</th></tr></thead>
                 <tbody>
@@ -838,7 +862,7 @@ function LoginScreen({ onLogin, branches }) {
       <div className="login-orbit">
         <span /><span /><span />
       </div>
-      <div className={`mcl-card glide-in ${shake ? "shake" : ""}`} style={{ padding: 36, width: 420, maxWidth: "100%", position: "relative", zIndex: 1, boxShadow: "0 30px 80px -30px rgba(212,175,55,.25)" }}>
+      <div className={`mcl-card glide-in ${shake ? "shake" : ""}`} style={{ padding: 36, width: 420, maxWidth: "100%", position: "relative", zIndex: 1, boxShadow: "0 30px 80px -30px rgba(var(--brand-rgb),.25)" }}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
           <HeroLogo size={128} />
         </div>
@@ -878,11 +902,11 @@ function LoginScreen({ onLogin, branches }) {
 
       <style>{`
         .login-orbit{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
-        .login-orbit span{ position:absolute; border-radius:50%; border:1px solid rgba(212,175,55,.18); }
+        .login-orbit span{ position:absolute; border-radius:50%; border:1px solid rgba(var(--brand-rgb),.18); }
         .login-orbit span:nth-child(1){ width:340px; height:340px; animation:spin 30s linear infinite; }
         .login-orbit span:nth-child(2){ width:520px; height:520px; border-color:rgba(61,123,250,.12); animation:spin 46s linear infinite reverse; }
-        .login-orbit span:nth-child(3){ width:700px; height:700px; border-color:rgba(212,175,55,.08); animation:spin 60s linear infinite; }
-        .login-logo-glow{ filter:drop-shadow(0 0 22px rgba(212,175,55,.45)); animation:floaty 4s ease-in-out infinite; }
+        .login-orbit span:nth-child(3){ width:700px; height:700px; border-color:rgba(var(--brand-rgb),.08); animation:spin 60s linear infinite; }
+        .login-logo-glow{ filter:drop-shadow(0 0 22px rgba(var(--brand-rgb),.45)); animation:floaty 4s ease-in-out infinite; }
         .shake{ animation:shakeX .45s; }
         @keyframes shakeX{ 10%,90%{ transform:translateX(-1px);} 20%,80%{ transform:translateX(2px);} 30%,50%,70%{ transform:translateX(-4px);} 40%,60%{ transform:translateX(4px);} }
       `}</style>
@@ -1373,7 +1397,7 @@ function NdrReasonModal({ awb, onConfirm, onCancel }) {
               style={{
                 display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, cursor: "pointer",
                 border: `1px solid ${selected === r ? "var(--brand)" : "var(--line)"}`,
-                background: selected === r ? "rgba(212,175,55,.1)" : "var(--panel2)",
+                background: selected === r ? "rgba(var(--brand-rgb),.1)" : "var(--panel2)",
                 transition: "border-color .2s ease, background .2s ease",
               }}
             >
@@ -1446,7 +1470,7 @@ function Overview({ bookings }) {
 
   return (
     <div className="glide-in">
-      <div className="mcl-card" style={{ padding: "16px 22px", marginBottom: 18, background: "linear-gradient(135deg, var(--panel-solid), var(--navy2))", border: "1px solid rgba(212,175,55,.2)" }}>
+      <div className="mcl-card" style={{ padding: "16px 22px", marginBottom: 18, background: "linear-gradient(135deg, var(--panel-solid), var(--navy2))", border: "1px solid rgba(var(--brand-rgb),.2)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, fontWeight: 700, fontSize: 13.5 }}>
           <Sparkles size={15} color="var(--brand)" /> Today's booking &amp; delivery snapshot
         </div>
@@ -1532,29 +1556,59 @@ function Overview({ bookings }) {
 
 /* ============================= PRINTABLE WAYBILL ============================= */
 
-function ConsignmentCheckbox({ label, checked }) {
+// ---------------------------------------------------------------------------
+// Print design system for the consignment note. Every dimension here is in
+// millimetres, computed to fit A4 (210 x 297mm) with an 8mm margin on every
+// side exactly:
+//   printable area  = 194mm wide x 281mm tall
+//   3 copies stacked = 91mm each + 4mm gap x2  ->  91*3 + 4*2 = 281mm (exact)
+//   4 columns        = 62 + 74 + 52 + 6mm      ->  194mm (exact)
+// Because every copy renders from the same fixed-mm grid (not %/fr guesses),
+// all three copies are byte-for-byte identical in size — no drift, no
+// rounding, no "1px off" between Consignor/Consignee/POD.
+// ---------------------------------------------------------------------------
+const WB_INK = "#1A1408";
+const WB_MUTED = "#6b5f3f";
+const WB_BAR = "#12172a";
+
+function WbCheckbox({ label, checked }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10.5 }}>
-      <div style={{ width: 11, height: 11, border: "1.3px solid #1A1408", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {checked && <Check size={9} strokeWidth={3.5} />}
-      </div>
+    <span className="wb-check">
+      <span className="wb-check-box">{checked && <Check size={7} strokeWidth={4} />}</span>
       {label}
-    </div>
+    </span>
   );
 }
 
-function ConsignmentBar({ children }) {
-  return (
-    <div style={{ background: "#12172a", color: "#fff", fontWeight: 700, fontSize: 11, letterSpacing: ".04em", padding: "4px 10px" }}>
-      {children}
-    </div>
-  );
+function WbBar({ children }) {
+  return <div className="wb-bar">{children}</div>;
 }
 
-// Matches the company's actual paper consignment note exactly: logo header,
-// PICKUP DETAILS box, NATURE OF GOODS box, AIRWAY BILL NO. box, consignor/
-// consignee blocks and a vertical copy-label strip — three copies (Consignor
-// / Consignee / POD) print together on a single A4 sheet.
+function WbUnderline({ width = 16 }) {
+  return <span className="wb-underline" style={{ width: `${width}mm` }}>&nbsp;</span>;
+}
+
+// Matches the company's actual paper consignment note: logo header, PICKUP
+// DETAILS box, NATURE OF GOODS box, AIRWAY BILL NO. box, consignor/consignee
+// blocks and a vertical copy-label strip — three copies (Consignor /
+// Consignee / POD) print together on a single A4 sheet.
+// Real, scannable CODE128 barcode for the AWB, rendered client-side with
+// jsbarcode onto a canvas — no network call at print time, works offline.
+// Requires: npm install jsbarcode (added to client/package.json).
+function AwbBarcode({ value }) {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    if (!canvasRef.current || !value) return;
+    try {
+      JsBarcode(canvasRef.current, value, {
+        format: "CODE128", displayValue: false, margin: 0,
+        width: 1.4, height: 60, background: "#ffffff", lineColor: WB_INK,
+      });
+    } catch (e) { /* invalid AWB chars — leave canvas blank rather than crash the print view */ }
+  }, [value]);
+  return <canvas ref={canvasRef} style={{ width: "100%", height: "9mm", display: "block" }} />;
+}
+
 function ConsignmentCopy({ booking, branch, copyLabel }) {
   const natureChecks = {
     dox: booking.shipmentType === "Document",
@@ -1576,62 +1630,62 @@ function ConsignmentCopy({ booking, branch, copyLabel }) {
   const branchName = branch ? branch.name : COMPANY.name;
 
   return (
-    <div style={{ border: "1.6px solid #1A1408", display: "grid", gridTemplateColumns: "1.15fr 1.3fr 1.15fr 20px", fontFamily: "var(--font-body)", color: "#1A1408", background: "#fff", fontSize: 11 }}>
+    <div className="wb-sheet-copy">
       {/* ---- Column 1: identity + consignor/consignee ---- */}
-      <div style={{ borderRight: "1.6px solid #1A1408", display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: "8px 10px", borderBottom: "1.6px solid #1A1408", display: "flex", gap: 7, alignItems: "flex-start" }}>
-          <img src={LOGO_SRC} alt="logo" style={{ width: 40, height: 40, objectFit: "contain", flexShrink: 0 }} />
-          <div>
-            <div className="font-display" style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.08 }}>METRO</div>
-            <div style={{ fontSize: 8.7, fontWeight: 700, letterSpacing: ".03em" }}>COURIER AND LOGISTICS</div>
-            <div style={{ fontSize: 7, letterSpacing: ".14em", color: "#6b5f3f" }}>— THE LOAD POINT —</div>
-            <div style={{ fontSize: 7, marginTop: 3, lineHeight: 1.3, color: "#3a3222" }}>
+      <div className="wb-col">
+        <div className="wb-block" style={{ display: "flex", gap: "2mm", alignItems: "flex-start" }}>
+          <img src={LOGO_SRC} alt="logo" style={{ width: "10.5mm", height: "10.5mm", objectFit: "contain", flexShrink: 0 }} />
+          <div style={{ minWidth: 0 }}>
+            <div className="font-display" style={{ fontSize: "13px", fontWeight: 800, lineHeight: 1.1, color: WB_INK }}>METRO</div>
+            <div style={{ fontSize: "7.5px", fontWeight: 700, letterSpacing: ".03em", color: WB_INK }}>COURIER AND LOGISTICS</div>
+            <div style={{ fontSize: "6.4px", letterSpacing: ".14em", color: WB_MUTED, marginTop: "0.3mm" }}>— THE LOAD POINT —</div>
+            <div style={{ fontSize: "6.4px", marginTop: "1mm", lineHeight: 1.4, color: WB_MUTED }}>
               {branch ? branch.address : COMPANY.address}<br />GST: {COMPANY.gst}
             </div>
           </div>
         </div>
 
-        <div style={{ padding: "7px 10px", borderBottom: "1.6px solid #1A1408" }}>
-          <div style={{ fontWeight: 700, fontSize: 10 }}>CONSIGNOR</div>
-          <div style={{ fontSize: 10.5, marginTop: 2 }}>Name: {booking.consignorName}</div>
-          <div style={{ fontSize: 10.5 }}>Address: {booking.consignorAddress}</div>
-          <div style={{ fontSize: 9.8 }}>Phone: {booking.consignorPhone}</div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9.8 }}>
+        <div className="wb-block wb-shaded">
+          <div className="wb-label">Consignor</div>
+          <div className="wb-field" style={{ marginTop: "0.6mm" }}>Name: <b>{booking.consignorName}</b></div>
+          <div className="wb-field">Address: {booking.consignorAddress}</div>
+          <div className="wb-field">Phone: {booking.consignorPhone}</div>
+          <div className="wb-field" style={{ display: "flex", justifyContent: "space-between" }}>
             <span>City: {booking.consignorCity}</span><span>PIN: {booking.consignorPincode}</span>
           </div>
         </div>
 
-        <div style={{ padding: "7px 10px", flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 10 }}>CONSIGNEE</div>
-          <div style={{ fontSize: 10.5, marginTop: 2 }}>Name: {booking.consigneeName}</div>
-          <div style={{ fontSize: 10.5 }}>Address: {booking.consigneeAddress}</div>
-          <div style={{ fontSize: 9.8 }}>Phone: {booking.consigneePhone}</div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9.8 }}>
+        <div className="wb-block grow wb-shaded">
+          <div className="wb-label">Consignee</div>
+          <div className="wb-field" style={{ marginTop: "0.6mm" }}>Name: <b>{booking.consigneeName}</b></div>
+          <div className="wb-field">Address: {booking.consigneeAddress}</div>
+          <div className="wb-field">Phone: {booking.consigneePhone}</div>
+          <div className="wb-field" style={{ display: "flex", justifyContent: "space-between" }}>
             <span>City: {booking.consigneeCity}</span><span>PIN: {booking.consigneePincode}</span>
           </div>
         </div>
       </div>
 
       {/* ---- Column 2: pickup details + nature of goods + total ---- */}
-      <div style={{ borderRight: "1.6px solid #1A1408", display: "flex", flexDirection: "column" }}>
-        <ConsignmentBar>PICKUP DETAILS</ConsignmentBar>
-        <div style={{ padding: "7px 10px", fontSize: 10.3, borderBottom: "1.6px solid #1A1408", lineHeight: 1.75 }}>
-          <div>EMP. NAME &amp; SIGN.: <b>{bookedByName} - {branchName}</b></div>
-          <div>DATE: <b>{fmtDate(booking.createdAt).split(",")[0]}</b></div>
-          <div>TIME: <b>{new Date(booking.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</b></div>
-          <div>Declared Invoice Value Rs.: <b>{booking.invoiceValue ? currency(booking.invoiceValue) : "—"}</b></div>
+      <div className="wb-col">
+        <WbBar>PICKUP DETAILS</WbBar>
+        <div className="wb-block" style={{ lineHeight: 1.85 }}>
+          <div className="wb-field">EMP. NAME &amp; SIGN.: <b>{bookedByName} - {branchName}</b></div>
+          <div className="wb-field">DATE: <b>{fmtDate(booking.createdAt).split(",")[0]}</b></div>
+          <div className="wb-field">TIME: <b>{new Date(booking.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</b></div>
+          <div className="wb-field">Declared Invoice Value Rs.: <b>{booking.invoiceValue ? currency(booking.invoiceValue) : "—"}</b></div>
         </div>
 
-        <ConsignmentBar>NATURE OF GOODS</ConsignmentBar>
-        <div style={{ padding: "7px 10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5, borderBottom: "1.6px solid #1A1408" }}>
-          <div style={{ display: "grid", gap: 4 }}>
-            <ConsignmentCheckbox label="DOX" checked={natureChecks.dox} />
-            <ConsignmentCheckbox label="NON DOX" checked={natureChecks.nonDox} />
-            <ConsignmentCheckbox label="CASH" checked={natureChecks.cash} />
-            <ConsignmentCheckbox label="TO-PAY" checked={natureChecks.toPay} />
-            <ConsignmentCheckbox label="CREDIT" checked={natureChecks.credit} />
+        <WbBar>NATURE OF GOODS</WbBar>
+        <div className="wb-block" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5mm" }}>
+          <div style={{ display: "grid", gap: "1.3mm" }}>
+            <WbCheckbox label="DOX" checked={natureChecks.dox} />
+            <WbCheckbox label="NON DOX" checked={natureChecks.nonDox} />
+            <WbCheckbox label="CASH" checked={natureChecks.cash} />
+            <WbCheckbox label="TO-PAY" checked={natureChecks.toPay} />
+            <WbCheckbox label="CREDIT" checked={natureChecks.credit} />
           </div>
-          <div style={{ fontSize: 10.3, display: "grid", gap: 4, alignContent: "start" }}>
+          <div className="wb-field" style={{ display: "grid", gap: "1.3mm", alignContent: "start" }}>
             <div>WEIGHT: <b>{booking.weight} Kg</b></div>
             <div>No.of Pcs: <b>{booking.pieces}</b></div>
             <div>CONTENT: <b>{booking.description || "—"}</b></div>
@@ -1640,68 +1694,67 @@ function ConsignmentCopy({ booking, branch, copyLabel }) {
           </div>
         </div>
 
-        <div style={{ padding: "7px 10px", borderBottom: "1.6px solid #1A1408", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontWeight: 700, fontSize: 11 }}>TOTAL AMOUNT</span>
-          <span className="font-mono" style={{ fontWeight: 800, fontSize: 13 }}>{currency(total)}/-</span>
+        <div className="wb-block" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontWeight: 700, fontSize: "9.5px" }}>TOTAL AMOUNT</span>
+          <span className="font-mono" style={{ fontWeight: 800, fontSize: "12px" }}>{currency(total)}/-</span>
         </div>
 
-        <div style={{ padding: "7px 10px", fontSize: 10.3, display: "flex", gap: 12, borderBottom: "1.6px solid #1A1408" }}>
-          <span>SIZE:</span>
-          <span>L <b style={{ borderBottom: "1px solid #1A1408", padding: "0 7px" }}>{hasSize ? booking.lengthCm : ""}</b></span>
-          <span>B <b style={{ borderBottom: "1px solid #1A1408", padding: "0 7px" }}>{hasSize ? booking.widthCm : ""}</b></span>
-          <span>H <b style={{ borderBottom: "1px solid #1A1408", padding: "0 7px" }}>{hasSize ? booking.heightCm : ""}</b></span>
+        <div className="wb-block" style={{ display: "flex", gap: "3mm", alignItems: "baseline" }}>
+          <span className="wb-field">SIZE:</span>
+          <span className="wb-field">L <b className="wb-underline" style={{ width: "9mm", textAlign: "center", display: "inline-block" }}>{hasSize ? booking.lengthCm : ""}</b></span>
+          <span className="wb-field">B <b className="wb-underline" style={{ width: "9mm", textAlign: "center", display: "inline-block" }}>{hasSize ? booking.widthCm : ""}</b></span>
+          <span className="wb-field">H <b className="wb-underline" style={{ width: "9mm", textAlign: "center", display: "inline-block" }}>{hasSize ? booking.heightCm : ""}</b></span>
         </div>
 
-        <div style={{ padding: "7px 10px", fontSize: 7.6, color: "#3a3222", lineHeight: 1.45 }}>
+        <div className="wb-block grow" style={{ fontSize: "6.4px", color: WB_MUTED, lineHeight: 1.5 }}>
           This is a non-negotiable Consignment note and is subject to standard conditions of carriage. Carrier's liability is limited to Rs. 100/- per consignment for any case.
         </div>
       </div>
 
       {/* ---- Column 3: AWB, e-way, mode, contact, POD ---- */}
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <div style={{ padding: "9px 10px", borderBottom: "1.6px solid #1A1408" }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: "#6b5f3f" }}>AIRWAY BILL NO.</div>
-          <div className="font-mono" style={{ fontSize: 17, fontWeight: 800, letterSpacing: ".02em" }}>{booking.awb}</div>
-          <div style={{ marginTop: 6, background: "#12172a", color: "#fff", textAlign: "center", fontWeight: 700, fontSize: 10.5, padding: "3px 6px" }}>
+      <div className="wb-col">
+        <div className="wb-block">
+          <div style={{ fontSize: "7px", fontWeight: 700, color: WB_MUTED, letterSpacing: ".03em" }}>AIRWAY BILL NO.</div>
+          <div className="font-mono" style={{ fontSize: "16px", fontWeight: 800, letterSpacing: ".02em", marginTop: "0.4mm" }}>{booking.awb}</div>
+          <div style={{ marginTop: "1.5mm" }}><AwbBarcode value={booking.awb} /></div>
+          <div style={{ marginTop: "1.5mm", background: WB_BAR, color: "#fff", textAlign: "center", fontWeight: 700, fontSize: "8.5px", padding: "1mm 1.5mm", WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}>
             {branchName} - {booking.consigneeCity || "—"}
           </div>
         </div>
 
-        <div style={{ padding: "7px 10px", borderBottom: "1.6px solid #1A1408" }}>
-          <div style={{ fontSize: 9.8, marginBottom: 5 }}>E-Way B.No.: <b>{booking.ewayBill || "—"}</b></div>
-          <div style={{ display: "flex", gap: 10 }}>
-            <ConsignmentCheckbox label="AIR" checked={modeChecks.air} />
-            <ConsignmentCheckbox label="TRAIN" checked={modeChecks.train} />
-            <ConsignmentCheckbox label="SURFACE" checked={modeChecks.surface} />
+        <div className="wb-block">
+          <div className="wb-field" style={{ marginBottom: "1.3mm" }}>E-Way B.No.: <b>{booking.ewayBill || "—"}</b></div>
+          <div style={{ display: "flex", gap: "2.5mm" }}>
+            <WbCheckbox label="AIR" checked={modeChecks.air} />
+            <WbCheckbox label="TRAIN" checked={modeChecks.train} />
+            <WbCheckbox label="SURFACE" checked={modeChecks.surface} />
           </div>
         </div>
 
-        <div style={{ padding: "7px 10px", borderBottom: "1.6px solid #1A1408", fontSize: 9.3, lineHeight: 1.85 }}>
+        <div className="wb-block" style={{ fontSize: "7.5px", lineHeight: 1.95 }}>
           <div>☎ Ph: {COMPANY.phone}</div>
           <div>WhatsApp: {COMPANY.whatsapp}</div>
           <div>e-mail: {COMPANY.email}</div>
           <div>web: {COMPANY.website}</div>
         </div>
 
-        <ConsignmentBar>RECEIVED BY CONSIGNMENT IN GOOD ORDER / CONDITION</ConsignmentBar>
-        <div style={{ padding: "7px 10px", fontSize: 9.8, lineHeight: 2, flex: 1 }}>
-          <div>NAME: <span style={{ borderBottom: "1px solid #1A1408", display: "inline-block", width: "60%" }}>&nbsp;</span></div>
+        <WbBar>RECEIVED BY CONSIGNMENT IN GOOD ORDER / CONDITION</WbBar>
+        <div className="wb-block grow" style={{ fontSize: "7.8px", lineHeight: 2.1 }}>
+          <div>NAME: <WbUnderline width={30} /></div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>SIGN: <span style={{ borderBottom: "1px solid #1A1408", display: "inline-block", width: 60 }}>&nbsp;</span></span>
-            <span>STAMP: <span style={{ borderBottom: "1px solid #1A1408", display: "inline-block", width: 55 }}>&nbsp;</span></span>
+            <span>SIGN: <WbUnderline width={13} /></span>
+            <span>STAMP: <WbUnderline width={12} /></span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>DATE: <span style={{ borderBottom: "1px solid #1A1408", display: "inline-block", width: 60 }}>&nbsp;</span></span>
-            <span>TIME: <span style={{ borderBottom: "1px solid #1A1408", display: "inline-block", width: 55 }}>&nbsp;</span> AM/PM</span>
+            <span>DATE: <WbUnderline width={13} /></span>
+            <span>TIME: <WbUnderline width={10} /> AM/PM</span>
           </div>
         </div>
       </div>
 
       {/* ---- Vertical copy label strip ---- */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "8px 1px" }}>
-        <div style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", fontSize: 10, fontWeight: 700, letterSpacing: ".1em", whiteSpace: "nowrap" }}>
-          {copyLabel}
-        </div>
+      <div className="wb-col wb-stripe" style={{ borderRight: "none" }}>
+        <div className="wb-stripe-text">{copyLabel}</div>
       </div>
     </div>
   );
@@ -1713,25 +1766,46 @@ function PrintableWaybill({ booking, onClose, branches = [] }) {
   const branch = branches.find((b) => b.id === booking.branchId);
   const copies = ["CONSIGNOR COPY", "CONSIGNEE COPY", "POD COPY"];
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.65)", zIndex: 100, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", padding: "30px 16px" }}>
-      <div className="waybill-sheet" style={{ background: "#fff", width: 900, maxWidth: "100%", borderRadius: 6, padding: 18 }}>
+    <div className="print-modal-backdrop" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.65)", zIndex: 100, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", padding: "30px 16px" }}>
+      <div className="waybill-sheet" style={{ background: "#fff", width: "204mm", maxWidth: "100%", borderRadius: 6, padding: "5mm" }}>
         <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 14 }}>
           <button className="btn btn-dark btn-sm" onClick={() => window.print()}><Printer size={13} /> Print all 3 copies — 1 page</button>
           <button className="btn btn-dark btn-sm" onClick={onClose}><X size={13} /> Close</button>
         </div>
 
-        {copies.map((label) => (
-          <div key={label} className="waybill-copy" style={{ marginBottom: 14 }}>
+        {copies.map((label, i) => (
+          <div key={label} className="waybill-copy" style={{ marginBottom: i < copies.length - 1 ? "4mm" : 0 }}>
             <ConsignmentCopy booking={booking} branch={branch} copyLabel={label} />
           </div>
         ))}
 
         <style>{`
+          .wb-sheet-copy{
+            width:194mm; height:91mm; box-sizing:border-box; overflow:hidden;
+            border:0.35mm solid ${WB_INK}; border-radius:1mm;
+            display:grid; grid-template-columns:62mm 74mm 52mm 6mm;
+            font-family:Arial, Helvetica, sans-serif; color:${WB_INK}; background:#fff;
+          }
+          .wb-col{ display:flex; flex-direction:column; border-right:0.3mm solid ${WB_INK}; min-width:0; min-height:0; }
+          .wb-block{ padding:2mm 2.4mm; border-bottom:0.3mm solid ${WB_INK}; flex-shrink:0; }
+          .wb-block.grow{ flex:1 1 auto; border-bottom:none; }
+          .wb-bar{ background:${WB_BAR}; color:#fff; font-weight:700; font-size:8px; letter-spacing:.05em; padding:1.2mm 2.4mm; flex-shrink:0; }
+          .wb-label{ font-size:7px; font-weight:700; color:${WB_MUTED}; text-transform:uppercase; letter-spacing:.04em; }
+          .wb-field{ font-size:8px; line-height:1.55; }
+          .wb-check{ display:inline-flex; align-items:center; gap:1mm; font-size:7.3px; font-weight:600; white-space:nowrap; }
+          .wb-check-box{ width:2.4mm; height:2.4mm; border:0.3mm solid ${WB_INK}; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+          .wb-underline{ border-bottom:0.25mm solid ${WB_INK}; display:inline-block; }
+          .wb-stripe{ align-items:center; justify-content:center; padding:2mm 0; border-right:none !important; }
+          .wb-stripe-text{ writing-mode:vertical-rl; transform:rotate(180deg); font-size:8px; font-weight:700; letter-spacing:.12em; white-space:nowrap; }
+          .wb-shaded{ background:#f6f2e6; }
+
           @page{ size:A4; margin:8mm; }
           @media print{
-            .waybill-sheet{ width:auto !important; padding:0 !important; }
-            .waybill-copy{ break-inside: avoid; page-break-inside: avoid; margin-bottom:8px !important; }
-            .waybill-copy:last-child{ margin-bottom:0 !important; }
+            html, body{ margin:0 !important; padding:0 !important; background:#fff !important; -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+            *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+            .print-modal-backdrop{ position:static !important; inset:auto !important; background:none !important; box-shadow:none !important; display:block !important; overflow:visible !important; padding:0 !important; }
+            .waybill-sheet{ width:auto !important; max-width:none !important; padding:0 !important; border-radius:0 !important; }
+            .waybill-copy{ break-inside:avoid; page-break-inside:avoid; }
           }
         `}</style>
       </div>
@@ -1743,124 +1817,457 @@ function PrintableWaybill({ booking, onClose, branches = [] }) {
 
 function ManifestField({ label, value }) {
   return (
-    <div style={{ fontSize: "2.5mm" }}>
-      <span style={{ color: "#6b5f3f", fontWeight: 600 }}>{label}: </span>
-      <span style={{ fontWeight: 700 }}>{value || "—"}</span>
+    <div className="mf-field">
+      <span className="mf-field-label">{label}: </span>
+      <span className="mf-field-value">{value || "—"}</span>
     </div>
   );
 }
 
 // Printable "Dispatch Entry" manifest — mirrors a real carrier dispatch
 // sheet: From/To branch + dispatch no. up top, driver / vehicle / vendor /
-// route details below, then a per-parcel table with a totals row.
+// route details below, then a per-parcel table with a totals row. Built on
+// the same token system as the consignment note (WB_INK/WB_MUTED/WB_BAR,
+// one consistent type scale, one consistent padding scale) so every printed
+// document in the app reads as one family, not three different designs.
 function PrintableManifest({ manifest, onClose }) {
   useEffect(() => { const t = setTimeout(() => window.print(), 300); return () => clearTimeout(t); }, []);
   if (!manifest) return null;
   const totalWeight = manifest.items.reduce((s, b) => s + (Number(b.weight) || 0), 0);
   const totalPcs = manifest.items.reduce((s, b) => s + (Number(b.pieces) || 0), 0);
-  const cellBorder = "0.3mm solid #1A1408";
+  const totalFreight = manifest.items.reduce((s, b) => s + freightAmount(b), 0);
+  const totalCod = manifest.items.reduce((s, b) => s + codAmount(b), 0);
   const destinations = [...new Set(manifest.items.map((b) => b.consigneeCity).filter(Boolean))];
+  const cols = ["S.No", "AWB No.", "Booking Date", "Consignor", "Consignee", "Origin", "Destination", "Pcs", "Weight (Kg)", "Service", "Status", "Freight", "COD", "Remarks"];
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.65)", zIndex: 100, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", padding: "30px 16px" }}>
-      <div className="manifest-sheet" style={{ background: "#fff", color: "#1A1408", width: "210mm", maxWidth: "100%", borderRadius: 6, padding: "10mm", fontFamily: "var(--font-body)", fontSize: "2.6mm" }}>
+    <div className="print-modal-backdrop" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.65)", zIndex: 100, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", padding: "30px 16px" }}>
+      <div className="manifest-sheet" style={{ background: "#fff", width: "210mm", maxWidth: "100%", borderRadius: 6, padding: "8mm" }}>
         <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 14 }}>
           <button className="btn btn-dark btn-sm" onClick={() => window.print()}><Printer size={13} /> Print</button>
           <button className="btn btn-dark btn-sm" onClick={onClose}><X size={13} /> Close</button>
         </div>
 
-        <div style={{ border: "0.5mm solid #1A1408" }}>
+        <div className="mf-frame">
           {/* Company header */}
-          <div style={{ display: "flex", alignItems: "center", gap: "3mm", padding: "3mm 4mm", borderBottom: cellBorder }}>
-            <img src={LOGO_SRC} alt="logo" style={{ width: "13mm", height: "13mm", objectFit: "contain" }} />
-            <div style={{ flex: 1 }}>
-              <div className="font-display" style={{ fontSize: "4.4mm", fontWeight: 800 }}>{COMPANY.name}</div>
-              <div style={{ fontSize: "2.2mm", color: "#6b5f3f" }}>{COMPANY.address} &nbsp;|&nbsp; Ph: {COMPANY.phone} &nbsp;|&nbsp; {COMPANY.email}</div>
+          <div className="mf-block" style={{ display: "flex", alignItems: "center", gap: "3mm" }}>
+            <img src={LOGO_SRC} alt="logo" style={{ width: "13mm", height: "13mm", objectFit: "contain", flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="font-display" style={{ fontSize: "4.4mm", fontWeight: 800, lineHeight: 1.15 }}>{COMPANY.name}</div>
+              <div className="mf-muted" style={{ fontSize: "2.2mm", marginTop: "0.6mm" }}>{COMPANY.address} &nbsp;|&nbsp; Ph: {COMPANY.phone} &nbsp;|&nbsp; {COMPANY.email}</div>
             </div>
-            <div style={{ textAlign: "right", fontSize: "2.3mm" }}>{fmtDate(manifest.createdAt)}</div>
+            <div style={{ textAlign: "right", fontSize: "2.3mm", flexShrink: 0 }}>{fmtDate(manifest.createdAt)}</div>
           </div>
 
           {/* Title bar */}
-          <div style={{ background: "#12172a", color: "#fff", textAlign: "center", fontWeight: 800, letterSpacing: ".12em", fontSize: "3.4mm", padding: "1.8mm", borderBottom: cellBorder }}>
-            DISPATCH ENTRY
-          </div>
+          <div className="mf-titlebar">DISPATCH ENTRY</div>
 
           {/* From / To / Dispatch No */}
-          <div style={{ display: "flex", borderBottom: cellBorder }}>
-            <div style={{ flex: 1, padding: "2.2mm 4mm", borderRight: cellBorder, display: "grid", gap: "1mm" }}>
+          <div className="mf-row">
+            <div className="mf-cell" style={{ flex: 1 }}>
               <ManifestField label="From Branch" value={manifest.fromBranch || (manifest.items[0] && manifest.items[0].branchName)} />
               <ManifestField label="Dispatch Date" value={fmtDate(manifest.createdAt).split(",")[0]} />
             </div>
-            <div style={{ flex: 1, padding: "2.2mm 4mm", borderRight: cellBorder, display: "grid", gap: "1mm" }}>
+            <div className="mf-cell" style={{ flex: 1 }}>
               <ManifestField label="To Branch / Destination" value={manifest.toBranch || destinations.join(", ")} />
               <ManifestField label="Route Name" value={manifest.routeName} />
             </div>
-            <div style={{ width: "50mm", padding: "2.2mm 4mm", flexShrink: 0 }}>
-              <div style={{ fontSize: "2.3mm", color: "#6b5f3f", fontWeight: 700 }}>DISPATCH NO.</div>
-              <div className="font-mono" style={{ fontSize: "4mm", fontWeight: 800 }}>{manifest.id}</div>
+            <div className="mf-cell" style={{ width: "50mm", flexShrink: 0, borderRight: "none" }}>
+              <div className="mf-field-label">DISPATCH NO.</div>
+              <div className="font-mono" style={{ fontSize: "4mm", fontWeight: 800, marginTop: "0.6mm" }}>{manifest.id}</div>
             </div>
           </div>
 
           {/* Driver / vehicle / vendor details */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: cellBorder }}>
-            <div style={{ padding: "2.2mm 4mm", borderRight: cellBorder, display: "grid", gap: "1mm" }}>
+          <div className="mf-row">
+            <div className="mf-cell" style={{ flex: 1 }}>
               <ManifestField label="Driver Name" value={manifest.driver} />
               <ManifestField label="Driver DL Number" value={manifest.driverDl} />
             </div>
-            <div style={{ padding: "2.2mm 4mm", borderRight: cellBorder, display: "grid", gap: "1mm" }}>
+            <div className="mf-cell" style={{ flex: 1 }}>
               <ManifestField label="Vehicle No." value={manifest.vehicle} />
               <ManifestField label="Driver Contact No." value={manifest.driverContact} />
             </div>
-            <div style={{ padding: "2.2mm 4mm", display: "grid", gap: "1mm" }}>
+            <div className="mf-cell" style={{ flex: 1, borderRight: "none" }}>
               <ManifestField label="Vendor Name" value={manifest.vendor} />
               <ManifestField label="Total AWB No." value={manifest.items.length} />
             </div>
           </div>
 
           {/* Parcel table */}
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "2.4mm" }}>
+          <table className="mf-table">
             <thead>
-              <tr style={{ background: "#efe9d8" }}>
-                {["S.No", "LR No.", "Booking Branch", "Consignor", "Consignee", "Destination", "PinCode", "Pcs", "Weight (Kg)"].map((h) => (
-                  <th key={h} style={{ textAlign: "left", padding: "1.6mm 2mm", borderRight: cellBorder, borderBottom: cellBorder, fontSize: "2.2mm" }}>{h}</th>
-                ))}
+              <tr>
+                {cols.map((h) => <th key={h}>{h}</th>)}
               </tr>
             </thead>
             <tbody>
               {manifest.items.map((b, i) => (
                 <tr key={b.awb}>
-                  <td style={{ padding: "1.5mm 2mm", borderRight: cellBorder, borderBottom: cellBorder }}>{i + 1}</td>
-                  <td className="font-mono" style={{ padding: "1.5mm 2mm", borderRight: cellBorder, borderBottom: cellBorder }}>{b.awb}</td>
-                  <td style={{ padding: "1.5mm 2mm", borderRight: cellBorder, borderBottom: cellBorder }}>{b.branchName || "—"}</td>
-                  <td style={{ padding: "1.5mm 2mm", borderRight: cellBorder, borderBottom: cellBorder }}>{b.consignorName}</td>
-                  <td style={{ padding: "1.5mm 2mm", borderRight: cellBorder, borderBottom: cellBorder }}>{b.consigneeName}</td>
-                  <td style={{ padding: "1.5mm 2mm", borderRight: cellBorder, borderBottom: cellBorder }}>{b.consigneeCity}</td>
-                  <td style={{ padding: "1.5mm 2mm", borderRight: cellBorder, borderBottom: cellBorder }}>{b.consigneePincode}</td>
-                  <td style={{ padding: "1.5mm 2mm", borderRight: cellBorder, borderBottom: cellBorder }}>{b.pieces}</td>
-                  <td style={{ padding: "1.5mm 2mm", borderBottom: cellBorder }}>{Number(b.weight).toFixed(1)}</td>
+                  <td>{i + 1}</td>
+                  <td className="font-mono">{b.awb}</td>
+                  <td>{fmtDateShort(b.createdAt)}</td>
+                  <td>{b.consignorName}</td>
+                  <td>{b.consigneeName}</td>
+                  <td>{b.branchName || "—"}</td>
+                  <td>{b.consigneeCity}{b.consigneePincode ? ` - ${b.consigneePincode}` : ""}</td>
+                  <td>{b.pieces}</td>
+                  <td>{Number(b.weight).toFixed(1)}</td>
+                  <td>{b.mode || "—"}</td>
+                  <td>{b.status}</td>
+                  <td>{currency(freightAmount(b))}</td>
+                  <td>{codAmount(b) ? currency(codAmount(b)) : "—"}</td>
+                  <td style={{ borderRight: "none" }}>{remarksFor(b)}</td>
                 </tr>
               ))}
-              <tr style={{ fontWeight: 800, background: "#f4efe3" }}>
-                <td colSpan={7} style={{ padding: "1.8mm 2mm", borderRight: cellBorder, textAlign: "right" }}>TOTAL</td>
-                <td style={{ padding: "1.8mm 2mm", borderRight: cellBorder }}>{totalPcs}</td>
-                <td style={{ padding: "1.8mm 2mm" }}>{totalWeight.toFixed(1)}</td>
+              <tr className="mf-total-row">
+                <td colSpan={7} style={{ textAlign: "right" }}>TOTAL</td>
+                <td>{totalPcs}</td>
+                <td>{totalWeight.toFixed(1)}</td>
+                <td colSpan={2}></td>
+                <td>{currency(totalFreight)}</td>
+                <td style={{ borderRight: "none" }}>{totalCod ? currency(totalCod) : "—"}</td>
               </tr>
             </tbody>
           </table>
 
-          <div style={{ padding: "2.5mm 4mm", fontSize: "2.2mm", color: "#6b5f3f", textAlign: "center", borderTop: cellBorder }}>
-            {COMPANY.address} • {COMPANY.phone} / {COMPANY.mobile} • {COMPANY.email}
+          <div className="mf-signrow">
+            <div className="mf-sign">Loaded By: <span style={{ display: "inline-block", width: "30mm", borderBottom: `0.25mm solid ${WB_INK}` }}>&nbsp;</span></div>
+            <div className="mf-sign">Checked By: <span style={{ display: "inline-block", width: "30mm", borderBottom: `0.25mm solid ${WB_INK}` }}>&nbsp;</span></div>
+            <div className="mf-sign">Driver Signature: <span style={{ display: "inline-block", width: "30mm", borderBottom: `0.25mm solid ${WB_INK}` }}>&nbsp;</span></div>
+          </div>
+
+          <div className="mf-footer">
+            <span>{COMPANY.address} • {COMPANY.phone} / {COMPANY.mobile} • {COMPANY.email}</span>
+            <span className="mf-footer-meta">Printed By: {manifest.printedBy || COMPANY.md} &nbsp;|&nbsp; Printed On: {fmtDate(new Date().toISOString())}</span>
           </div>
         </div>
 
         <style>{`
+          .mf-frame{ border:0.45mm solid ${WB_INK}; font-family:var(--font-body); color:${WB_INK}; font-size:2.6mm; }
+          .mf-block{ padding:3mm 4mm; border-bottom:0.3mm solid ${WB_INK}; }
+          .mf-muted{ color:${WB_MUTED}; }
+          .mf-titlebar{ background:${WB_BAR}; color:#fff; text-align:center; font-weight:800; letter-spacing:.12em; font-size:3.4mm; padding:2mm; border-bottom:0.3mm solid ${WB_INK}; }
+          .mf-row{ display:flex; border-bottom:0.3mm solid ${WB_INK}; }
+          .mf-cell{ padding:2.4mm 4mm; border-right:0.3mm solid ${WB_INK}; display:grid; gap:1.2mm; align-content:start; min-width:0; }
+          .mf-field-label{ font-size:2.3mm; color:${WB_MUTED}; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+          .mf-field-value{ font-size:2.6mm; font-weight:700; }
+          .mf-field{ line-height:1.4; }
+
+          .mf-table{ width:100%; border-collapse:collapse; font-size:2.1mm; table-layout:fixed; }
+          .mf-table th{ text-align:left; padding:1.5mm 1.6mm; border-right:0.3mm solid ${WB_INK}; border-bottom:0.3mm solid ${WB_INK}; font-size:1.9mm; font-weight:700; text-transform:uppercase; letter-spacing:.02em; background:#efe9d8; overflow:hidden; }
+          .mf-table td{ padding:1.4mm 1.6mm; border-right:0.3mm solid ${WB_INK}; border-bottom:0.3mm solid ${WB_INK}; font-size:2.1mm; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+          .mf-table tr{ break-inside:avoid; page-break-inside:avoid; }
+          .mf-table thead{ display:table-header-group; }
+          .mf-total-row{ font-weight:800; background:#f4efe3; }
+          .mf-signrow{ display:flex; justify-content:space-between; gap:4mm; padding:3.5mm 4mm; border-top:0.3mm solid ${WB_INK}; font-size:2.3mm; }
+          .mf-footer{ padding:2.6mm 4mm; font-size:2mm; color:${WB_MUTED}; display:flex; justify-content:space-between; gap:4mm; border-top:0.3mm solid ${WB_INK}; }
+          .mf-footer-meta{ flex-shrink:0; }
+
           @page{ size:A4; margin:8mm; }
-          @media print{ .manifest-sheet{ width:auto !important; padding:0 !important; } }
+          @media print{
+            html, body{ margin:0 !important; padding:0 !important; background:#fff !important; -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+            *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+            .print-modal-backdrop{ position:static !important; inset:auto !important; background:none !important; box-shadow:none !important; display:block !important; overflow:visible !important; padding:0 !important; }
+            .manifest-sheet{ width:auto !important; max-width:none !important; padding:0 !important; border-radius:0 !important; }
+            thead{ display:table-header-group; }
+          }
         `}</style>
       </div>
     </div>
   );
 }
+
+/* ============================= GENERIC PRINT REPORT ENGINE ============================= */
+// One shared, print-hardened table engine (repeating header on every page,
+// row-split protection, print-color-adjust, portrait/landscape) that every
+// operational report below is built from — so all of them share exactly the
+// same borders/padding/typography instead of nine hand-tuned layouts.
+
+function codAmount(b) { return b.paymentType === "ToPay" ? (Number(b.total) || 0) : 0; }
+function freightAmount(b) { return Number(b.total) || 0; }
+// Assumes GST% is applied on top of the booking total (exclusive), matching
+// how gstPercent is captured at booking time (see BookingForm). If your
+// accounting treats the stored total as GST-inclusive, swap this formula.
+function gstAmountFor(b) {
+  const pct = Number(b.gstPercent) || 0;
+  if (!pct) return 0;
+  return freightAmount(b) * (pct / 100);
+}
+function remarksFor(b) {
+  if (b.status === "RTO") return "Returned to origin";
+  if (b.status === "NDR") return b.ndrReason || "Delivery attempt failed";
+  return "—";
+}
+
+// Reusable column definitions — every report picks a subset by key.
+const REPORT_COLUMNS = {
+  sl: { label: "Sl.No", align: "center", w: "9mm", render: (b, i) => i + 1 },
+  awb: { label: "AWB Number", mono: true, w: "24mm", render: (b) => b.awb },
+  bookingDate: { label: "Booking Date", w: "20mm", render: (b) => fmtDateShort(b.createdAt) },
+  client: { label: "Client Name", render: (b) => b.consignorName },
+  consignor: { label: "Consignor", render: (b) => b.consignorName },
+  consignee: { label: "Consignee", render: (b) => b.consigneeName },
+  consigneePhone: { label: "Phone", w: "22mm", render: (b) => b.consigneePhone },
+  consigneeAddress: { label: "Address", render: (b) => b.consigneeAddress },
+  origin: { label: "Origin", render: (b) => b.branchName || "—" },
+  destination: { label: "Destination", render: (b) => b.consigneeCity || "—" },
+  pincode: { label: "PIN Code", w: "16mm", render: (b) => b.consigneePincode || "—" },
+  shipmentType: { label: "Shipment Type", w: "22mm", render: (b) => b.shipmentType },
+  pieces: { label: "Pcs", align: "center", w: "10mm", render: (b) => b.pieces },
+  weight: { label: "Weight (Kg)", align: "right", w: "18mm", render: (b) => Number(b.weight || 0).toFixed(1) },
+  serviceType: { label: "Service Type", w: "18mm", render: (b) => b.mode },
+  cod: { label: "COD", align: "right", w: "18mm", render: (b) => codAmount(b) ? currency(codAmount(b)) : "—" },
+  freight: { label: "Freight", align: "right", w: "18mm", render: (b) => currency(freightAmount(b)) },
+  gst: { label: "GST", align: "right", w: "16mm", render: (b) => b.gstPercent ? currency(gstAmountFor(b)) : "—" },
+  oda: { label: "ODA/Regular", align: "center", w: "18mm", render: (b) => b.oda || "Regular" },
+  status: { label: "Status", w: "20mm", render: (b) => b.status },
+  remarks: { label: "Remarks", render: (b) => remarksFor(b) },
+  loaded: { label: "Loaded", align: "center", w: "16mm", render: () => "☐" },
+  delivered: { label: "Delivered", align: "center", w: "18mm", render: () => "☐ Yes  ☐ No" },
+  signature: { label: "Signature", w: "26mm", render: () => "" },
+};
+
+function PrintableReport({ config, onClose }) {
+  useEffect(() => { const t = setTimeout(() => window.print(), 300); return () => clearTimeout(t); }, []);
+  if (!config) return null;
+  const { title, subtitle, meta = [], columns, rows, totals = [], orientation = "portrait", branch } = config;
+  const pageW = orientation === "landscape" ? 297 : 210;
+  const contentW = pageW - 16; // 8mm margin both sides
+
+  return (
+    <div className="print-modal-backdrop" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.65)", zIndex: 100, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", padding: "30px 16px" }}>
+      <div className="report-sheet" style={{ background: "#fff", width: `${pageW}mm`, maxWidth: "100%", borderRadius: 6, padding: "8mm" }}>
+        <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 14 }}>
+          <button className="btn btn-dark btn-sm" onClick={() => window.print()}><Printer size={13} /> Print</button>
+          <button className="btn btn-dark btn-sm" onClick={onClose}><X size={13} /> Close</button>
+        </div>
+
+        <div className="pr-frame" style={{ width: `${contentW}mm` }}>
+          <div className="pr-block" style={{ display: "flex", alignItems: "center", gap: "3mm" }}>
+            <img src={LOGO_SRC} alt="logo" style={{ width: "12mm", height: "12mm", objectFit: "contain", flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="font-display" style={{ fontSize: "4mm", fontWeight: 800, lineHeight: 1.15 }}>{COMPANY.name}</div>
+              <div className="pr-muted" style={{ fontSize: "2.1mm", marginTop: "0.5mm" }}>
+                {branch ? branch.address : COMPANY.address} &nbsp;|&nbsp; Ph: {COMPANY.phone} &nbsp;|&nbsp; {COMPANY.email}
+              </div>
+            </div>
+            <div style={{ textAlign: "right", fontSize: "2.2mm", flexShrink: 0 }}>
+              Printed: {fmtDate(new Date().toISOString())}
+            </div>
+          </div>
+
+          <div className="pr-titlebar">
+            <span>{title}</span>
+            {subtitle && <span className="pr-titlebar-sub">{subtitle}</span>}
+          </div>
+
+          {meta.length > 0 && (
+            <div className="pr-meta">
+              {meta.map((m) => (
+                <div key={m.label} className="pr-meta-item">
+                  <span className="pr-field-label">{m.label}: </span>
+                  <span className="pr-field-value">{m.value || "—"}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <table className="pr-table">
+            <thead>
+              <tr>
+                {columns.map((c) => {
+                  const col = REPORT_COLUMNS[c];
+                  return <th key={c} style={{ width: col.w, textAlign: col.align || "left" }}>{col.label}</th>;
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.length === 0 ? (
+                <tr><td colSpan={columns.length} style={{ textAlign: "center", padding: "6mm", color: WB_MUTED }}>No records for this selection.</td></tr>
+              ) : rows.map((b, i) => (
+                <tr key={b.awb || i}>
+                  {columns.map((c) => {
+                    const col = REPORT_COLUMNS[c];
+                    return <td key={c} className={col.mono ? "font-mono" : ""} style={{ textAlign: col.align || "left" }}>{col.render(b, i)}</td>;
+                  })}
+                </tr>
+              ))}
+              {totals.length > 0 && rows.length > 0 && (() => {
+                const firstTotalIdx = columns.findIndex((c) => totals.some((t) => t.col === c));
+                const labelSpan = firstTotalIdx > 0 ? firstTotalIdx : 1;
+                return (
+                  <tr className="pr-total-row">
+                    {columns.map((c, idx) => {
+                      if (idx === 0) return <td key={c} colSpan={labelSpan} style={{ textAlign: "right" }}>TOTAL</td>;
+                      if (idx < labelSpan) return null; // absorbed into the leading TOTAL cell's colSpan
+                      const t = totals.find((t) => t.col === c);
+                      return <td key={c} style={{ textAlign: t ? "right" : (REPORT_COLUMNS[c].align || "left") }}>{t ? t.value : ""}</td>;
+                    })}
+                  </tr>
+                );
+              })()}
+            </tbody>
+          </table>
+
+          <div className="pr-footer">
+            {COMPANY.address} • {COMPANY.phone} / {COMPANY.mobile} • {COMPANY.email} &nbsp;|&nbsp; {rows.length} record{rows.length === 1 ? "" : "s"}
+          </div>
+        </div>
+
+        <style>{`
+          .pr-frame{ border:0.45mm solid ${WB_INK}; font-family:var(--font-body); color:${WB_INK}; font-size:2.5mm; }
+          .pr-block{ padding:2.8mm 4mm; border-bottom:0.3mm solid ${WB_INK}; }
+          .pr-muted{ color:${WB_MUTED}; }
+          .pr-titlebar{ background:${WB_BAR}; color:#fff; display:flex; align-items:baseline; justify-content:center; gap:4mm; font-weight:800; letter-spacing:.1em; font-size:3.2mm; padding:1.8mm; border-bottom:0.3mm solid ${WB_INK}; }
+          .pr-titlebar-sub{ font-weight:500; letter-spacing:.03em; font-size:2.4mm; opacity:.85; }
+          .pr-meta{ display:flex; flex-wrap:wrap; border-bottom:0.3mm solid ${WB_INK}; }
+          .pr-meta-item{ padding:2mm 4mm; border-right:0.3mm solid ${WB_INK}; flex:1 1 auto; min-width:38mm; }
+          .pr-field-label{ font-size:2.1mm; color:${WB_MUTED}; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+          .pr-field-value{ font-size:2.5mm; font-weight:700; }
+
+          .pr-table{ width:100%; border-collapse:collapse; font-size:2.3mm; table-layout:fixed; }
+          .pr-table th{ padding:1.6mm 2mm; border-right:0.3mm solid ${WB_INK}; border-bottom:0.3mm solid ${WB_INK}; font-size:2.1mm; font-weight:700; text-transform:uppercase; letter-spacing:.02em; background:#efe9d8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+          .pr-table td{ padding:1.5mm 2mm; border-right:0.3mm solid ${WB_INK}; border-bottom:0.3mm solid ${WB_INK}; font-size:2.3mm; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+          .pr-table th:last-child, .pr-table td:last-child{ border-right:none; }
+          .pr-table tr{ break-inside:avoid; page-break-inside:avoid; }
+          .pr-table thead{ display:table-header-group; }
+          .pr-table tfoot{ display:table-footer-group; }
+          .pr-total-row{ font-weight:800; background:#f4efe3; }
+          .pr-footer{ padding:2.4mm 4mm; font-size:2.1mm; color:${WB_MUTED}; text-align:center; border-top:0.3mm solid ${WB_INK}; }
+
+          @page{ size:A4 ${orientation}; margin:8mm; }
+          @media print{
+            html, body{ margin:0 !important; padding:0 !important; background:#fff !important; -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+            *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+            .print-modal-backdrop{ position:static !important; inset:auto !important; background:none !important; box-shadow:none !important; display:block !important; overflow:visible !important; padding:0 !important; }
+            .report-sheet{ width:auto !important; max-width:none !important; padding:0 !important; border-radius:0 !important; }
+            .pr-frame{ width:auto !important; }
+            thead{ display:table-header-group; }
+            tfoot{ display:table-footer-group; }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// The 9 report types. Each is a small config, not a bespoke component — they
+// all render through PrintableReport above, so alignment/borders/typography
+// are identical across every one of them by construction.
+//
+// Note on data honesty: this app's booking record doesn't track a "bag"
+// concept (parcels aren't grouped into courier bags), so no report below
+// invents a bag count — where the original spec asked for "Total Bags" it's
+// intentionally left out rather than shown as a fabricated number.
+// ---------------------------------------------------------------------------
+const REPORT_TYPES = [
+  {
+    id: "daily-branch", label: "Daily Branch Manifest",
+    build: (bookings, { branch, date }) => {
+      const rows = bookings.filter((b) => b.branchId === branch.id && fmtDateShort(b.createdAt) === fmtDateShort(date));
+      return {
+        title: "DAILY BRANCH MANIFEST", subtitle: branch.name, orientation: "portrait", branch,
+        meta: [{ label: "Branch", value: branch.name }, { label: "Date", value: fmtDateShort(date) }, { label: "Total Shipments", value: rows.length }],
+        columns: ["sl", "awb", "consignor", "consignee", "destination", "pieces", "weight", "serviceType", "cod", "status"],
+        rows,
+        totals: [{ col: "pieces", value: rows.reduce((s, b) => s + (Number(b.pieces) || 0), 0) }, { col: "weight", value: rows.reduce((s, b) => s + (Number(b.weight) || 0), 0).toFixed(1) }, { col: "cod", value: currency(rows.reduce((s, b) => s + codAmount(b), 0)) }],
+      };
+    },
+  },
+  {
+    id: "outgoing", label: "Outgoing Manifest",
+    build: (bookings, { branch, date }) => {
+      const rows = bookings.filter((b) => b.branchId === branch.id && b.status !== "Booked" && fmtDateShort(b.createdAt) === fmtDateShort(date));
+      return {
+        title: "OUTGOING MANIFEST", subtitle: `Ex-${branch.name}`, orientation: "portrait", branch,
+        meta: [{ label: "Origin Branch", value: branch.name }, { label: "Date", value: fmtDateShort(date) }, { label: "Total Shipments", value: rows.length }],
+        columns: ["sl", "awb", "consignee", "destination", "pincode", "pieces", "weight", "serviceType", "freight"],
+        rows,
+        totals: [{ col: "pieces", value: rows.reduce((s, b) => s + (Number(b.pieces) || 0), 0) }, { col: "weight", value: rows.reduce((s, b) => s + (Number(b.weight) || 0), 0).toFixed(1) }, { col: "freight", value: currency(rows.reduce((s, b) => s + freightAmount(b), 0)) }],
+      };
+    },
+  },
+  {
+    id: "incoming", label: "Incoming Manifest",
+    build: (bookings, { branch, date }) => {
+      const rows = bookings.filter((b) => b.destinationBranchId === branch.id && b.status !== "Delivered" && b.status !== "RTO");
+      return {
+        title: "INCOMING MANIFEST", subtitle: `To ${branch.name}`, orientation: "portrait", branch,
+        meta: [{ label: "Destination Branch", value: branch.name }, { label: "Printed For", value: fmtDateShort(date) }, { label: "Total Incoming", value: rows.length }],
+        columns: ["sl", "awb", "origin", "consignee", "consigneePhone", "pieces", "weight", "cod", "status"],
+        rows,
+        totals: [{ col: "pieces", value: rows.reduce((s, b) => s + (Number(b.pieces) || 0), 0) }, { col: "weight", value: rows.reduce((s, b) => s + (Number(b.weight) || 0), 0).toFixed(1) }, { col: "cod", value: currency(rows.reduce((s, b) => s + codAmount(b), 0)) }],
+      };
+    },
+  },
+  {
+    id: "vehicle-loading", label: "Vehicle Loading Sheet",
+    build: (bookings, { branch, date, vehicle, driver }) => {
+      const rows = bookings.filter((b) => b.branchId === branch.id && b.status !== "Booked" && fmtDateShort(b.createdAt) === fmtDateShort(date));
+      return {
+        title: "VEHICLE LOADING SHEET", subtitle: branch.name, orientation: "portrait", branch,
+        meta: [{ label: "Vehicle No.", value: vehicle }, { label: "Driver", value: driver }, { label: "Loading Point", value: branch.name }, { label: "Date", value: fmtDateShort(date) }],
+        columns: ["sl", "awb", "consignee", "destination", "pieces", "weight", "loaded"],
+        rows,
+        totals: [{ col: "pieces", value: rows.reduce((s, b) => s + (Number(b.pieces) || 0), 0) }, { col: "weight", value: rows.reduce((s, b) => s + (Number(b.weight) || 0), 0).toFixed(1) }],
+      };
+    },
+  },
+  {
+    id: "delivery-run", label: "Delivery Run Sheet",
+    build: (bookings, { branch, date, rider, vehicle }) => {
+      const rows = bookings.filter((b) => b.destinationBranchId === branch.id && b.status === "Out for Delivery");
+      return {
+        title: "DELIVERY RUN SHEET", subtitle: branch.name, orientation: "portrait", branch,
+        meta: [{ label: "Delivery Branch", value: branch.name }, { label: "Rider / Vehicle", value: `${rider || "—"} / ${vehicle || "—"}` }, { label: "Date", value: fmtDateShort(date) }, { label: "Total Stops", value: rows.length }],
+        columns: ["sl", "awb", "consignee", "consigneeAddress", "consigneePhone", "cod", "delivered", "signature"],
+        rows,
+        totals: [{ col: "cod", value: currency(rows.reduce((s, b) => s + codAmount(b), 0)) }],
+      };
+    },
+  },
+  {
+    id: "hub-transfer", label: "Hub Transfer Manifest",
+    build: (bookings, { fromBranch, toBranch, date }) => {
+      const rows = bookings.filter((b) => b.branchId === fromBranch.id && b.destinationBranchId === toBranch.id && b.status !== "Delivered");
+      return {
+        title: "HUB TRANSFER MANIFEST", subtitle: `${fromBranch.name} → ${toBranch.name}`, orientation: "portrait", branch: fromBranch,
+        meta: [{ label: "From Hub", value: fromBranch.name }, { label: "To Hub", value: toBranch.name }, { label: "Transfer Date", value: fmtDateShort(date) }, { label: "Total Shipments", value: rows.length }],
+        columns: ["sl", "awb", "consignor", "consignee", "pieces", "weight", "serviceType", "status"],
+        rows,
+        totals: [{ col: "pieces", value: rows.reduce((s, b) => s + (Number(b.pieces) || 0), 0) }, { col: "weight", value: rows.reduce((s, b) => s + (Number(b.weight) || 0), 0).toFixed(1) }],
+      };
+    },
+  },
+  {
+    id: "air-cargo", label: "Air Cargo Manifest",
+    build: (bookings, { branch, date }) => {
+      const rows = bookings.filter((b) => b.branchId === branch.id && b.mode === "Air" && fmtDateShort(b.createdAt) === fmtDateShort(date));
+      return {
+        title: "AIR CARGO MANIFEST", subtitle: branch.name, orientation: "portrait", branch,
+        meta: [{ label: "Origin Branch", value: branch.name }, { label: "Date", value: fmtDateShort(date) }, { label: "Mode", value: "Air" }, { label: "Total AWBs", value: rows.length }],
+        columns: ["sl", "awb", "consignor", "consignee", "destination", "pieces", "weight", "freight"],
+        rows,
+        totals: [{ col: "pieces", value: rows.reduce((s, b) => s + (Number(b.pieces) || 0), 0) }, { col: "weight", value: rows.reduce((s, b) => s + (Number(b.weight) || 0), 0).toFixed(1) }, { col: "freight", value: currency(rows.reduce((s, b) => s + freightAmount(b), 0)) }],
+      };
+    },
+  },
+  {
+    id: "surface-cargo", label: "Surface Cargo Manifest",
+    build: (bookings, { branch, date }) => {
+      const rows = bookings.filter((b) => b.branchId === branch.id && b.mode !== "Air" && fmtDateShort(b.createdAt) === fmtDateShort(date));
+      return {
+        title: "SURFACE CARGO MANIFEST", subtitle: branch.name, orientation: "portrait", branch,
+        meta: [{ label: "Origin Branch", value: branch.name }, { label: "Date", value: fmtDateShort(date) }, { label: "Mode", value: "Surface / Express" }, { label: "Total AWBs", value: rows.length }],
+        columns: ["sl", "awb", "consignor", "consignee", "destination", "pieces", "weight", "freight"],
+        rows,
+        totals: [{ col: "pieces", value: rows.reduce((s, b) => s + (Number(b.pieces) || 0), 0) }, { col: "weight", value: rows.reduce((s, b) => s + (Number(b.weight) || 0), 0).toFixed(1) }, { col: "freight", value: currency(rows.reduce((s, b) => s + freightAmount(b), 0)) }],
+      };
+    },
+  },
+];
 
 /* ============================= ADMIN: MANIFEST & DISPATCH ============================= */
 
@@ -1927,7 +2334,7 @@ function ManifestPanel({ bookings, onCreateManifest, onPrintManifest, notify, br
             No parcels waiting for dispatch — everything "Booked" has already gone out.
           </div>
         ) : (
-          <div style={{ maxHeight: 320, overflowY: "auto" }}>
+          <div style={{ maxHeight: 320, overflowY: "auto", overflowX: "auto" }}>
             <table className="mcl-table">
               <thead><tr><th></th><th>AWB</th><th>Route</th><th>Consignee</th><th>Wt</th></tr></thead>
               <tbody>
@@ -2159,7 +2566,7 @@ function BranchManagement({ branches, onAdd, onUpdate, onDelete, notify }) {
             <div key={b.id} className="mcl-card-2" style={{ padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
               <div>
                 <div style={{ fontWeight: 700, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  {b.name} <span className="font-mono badge" style={{ fontSize: 11, color: "var(--brand)", background: "rgba(212,175,55,.14)" }}>ID: {b.id}</span>
+                  {b.name} <span className="font-mono badge" style={{ fontSize: 11, color: "var(--brand)", background: "rgba(var(--brand-rgb),.14)" }}>ID: {b.id}</span>
                   {!b.active && <span className="badge" style={{ color: "var(--muted)", background: "rgba(140,151,179,.14)" }}>Inactive</span>}
                 </div>
                 <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{b.city ? `${b.city} · ` : ""}{b.address}</div>
@@ -2188,28 +2595,74 @@ function BranchManagement({ branches, onAdd, onUpdate, onDelete, notify }) {
 
 /* ============================= MIS REPORT (DETAILED, FILTERABLE) ============================= */
 
-function MISReportPanel({ bookings, notify }) {
+function MISReportPanel({ bookings, branches, notify, onPrintReport }) {
   const todayIso = new Date().toISOString().slice(0, 10);
-  const [fromDate, setFromDate] = useState(todayIso);
-  const [toDate, setToDate] = useState(todayIso);
-  const [client, setClient] = useState("");
-  const [applied, setApplied] = useState({ fromDate: todayIso, toDate: todayIso, client: "" });
+  const emptyFilters = { fromDate: todayIso, toDate: todayIso, branchId: "", client: "", status: "", shipmentType: "", oda: "" };
+  const [draft, setDraft] = useState(emptyFilters);
+  const [applied, setApplied] = useState(emptyFilters);
+  const [q, setQ] = useState("");
+  const [sortKey, setSortKey] = useState("createdAt");
+  const [sortDir, setSortDir] = useState("desc");
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
+
+  const STATUSES = ["Booked", "In Transit", "Out for Delivery", "Delivered", "RTO", "NDR"];
 
   const filtered = useMemo(() => {
     const from = new Date(applied.fromDate); from.setHours(0, 0, 0, 0);
     const to = new Date(applied.toDate); to.setHours(23, 59, 59, 999);
-    return bookings.filter((b) => {
+    let rows = bookings.filter((b) => {
       const d = new Date(b.createdAt);
       if (d < from || d > to) return false;
-      if (applied.client && !(b.clientAccount || "").toLowerCase().includes(applied.client.toLowerCase())) return false;
+      if (applied.branchId && b.branchId !== applied.branchId) return false;
+      if (applied.client && !(b.clientAccount || b.consignorName || "").toLowerCase().includes(applied.client.toLowerCase())) return false;
+      if (applied.status && b.status !== applied.status) return false;
+      if (applied.shipmentType && b.shipmentType !== applied.shipmentType) return false;
+      if (applied.oda && (b.oda || "Regular") !== applied.oda) return false;
       return true;
-    }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }, [bookings, applied]);
+    });
+    if (q.trim()) {
+      const s = q.trim().toLowerCase();
+      rows = rows.filter((b) =>
+        b.awb.toLowerCase().includes(s) || (b.consignorName || "").toLowerCase().includes(s) ||
+        (b.consigneeName || "").toLowerCase().includes(s) || (b.consigneeCity || "").toLowerCase().includes(s) ||
+        (b.clientAccount || "").toLowerCase().includes(s)
+      );
+    }
+    const dir = sortDir === "asc" ? 1 : -1;
+    rows = [...rows].sort((a, b) => {
+      let av, bv;
+      switch (sortKey) {
+        case "awb": av = a.awb; bv = b.awb; break;
+        case "consignee": av = a.consigneeName || ""; bv = b.consigneeName || ""; break;
+        case "weight": av = Number(a.weight) || 0; bv = Number(b.weight) || 0; break;
+        case "freight": av = freightAmount(a); bv = freightAmount(b); break;
+        case "status": av = a.status; bv = b.status; break;
+        default: av = new Date(a.createdAt).getTime(); bv = new Date(b.createdAt).getTime();
+      }
+      if (av < bv) return -1 * dir; if (av > bv) return 1 * dir; return 0;
+    });
+    return rows;
+  }, [bookings, applied, q, sortKey, sortDir]);
 
-  function search() { setApplied({ fromDate, toDate, client }); }
-  function reset() { setFromDate(todayIso); setToDate(todayIso); setClient(""); setApplied({ fromDate: todayIso, toDate: todayIso, client: "" }); }
+  const totals = useMemo(() => ({
+    revenue: filtered.reduce((s, b) => s + freightAmount(b), 0),
+    gst: filtered.reduce((s, b) => s + gstAmountFor(b), 0),
+    weight: filtered.reduce((s, b) => s + (Number(b.weight) || 0), 0),
+    pieces: filtered.reduce((s, b) => s + (Number(b.pieces) || 0), 0),
+  }), [filtered]);
 
-  function exportReport() {
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  function search() { setApplied(draft); setPage(1); }
+  function reset() { setDraft(emptyFilters); setApplied(emptyFilters); setQ(""); setPage(1); }
+  function toggleSort(key) {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir("desc"); }
+  }
+
+  function exportExcel() {
     const rows = filtered.map((b, i) => ({
       SrNo: i + 1, "Booking Date": fmtDateShort(b.createdAt), "Awb No": b.awb,
       "Consignor Name": b.consignorName, "Consignor City": b.consignorCity, "Consignor Country": "INDIA",
@@ -2221,75 +2674,170 @@ function MISReportPanel({ bookings, notify }) {
       "Receiver Name": b.consigneeName, "RTO Awb No": b.rtoAwbNo || "",
       "Forwarder Name": b.forwarderName || "", "Forwarder LR No": b.forwarderLrNo || "",
       "Last Known City": currentStation(b), Remark: b.remarks || "",
-      "ODA/REGULAR": b.oda, "E-WAYBILLVALIDITY": b.ewayBill || "",
+      "ODA/REGULAR": b.oda || "Regular", "E-WAYBILLVALIDITY": b.ewayBill || "",
       "Invoice No": b.invoiceNumber || "", Piece: b.pieces, "Actual Weight": b.weight,
       "Current Date": fmtDateShort(new Date().toISOString()), "Current Station": currentStation(b), "Current Status": b.status.toUpperCase(),
       "PO Number": b.poNumber || "", "Shipment Type": b.shipmentType,
+      Revenue: freightAmount(b), GST: gstAmountFor(b), COD: codAmount(b),
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.sheet_add_json(ws, [{ SrNo: "TOTAL", Piece: totals.pieces, "Actual Weight": totals.weight.toFixed(1), Revenue: totals.revenue, GST: totals.gst }], { skipHeader: true, origin: -1 });
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "MIS Report");
     XLSX.writeFile(wb, `MISReport_${fmtDateShort(new Date().toISOString())}.xlsx`);
     notify({ title: "MIS Report exported", msg: `${rows.length} shipments`, color: "var(--blue)" });
   }
 
+  function exportPdf() {
+    if (!onPrintReport) return;
+    const branch = branches.find((b) => b.id === applied.branchId);
+    onPrintReport({
+      title: "MIS Report",
+      subtitle: `${fmtDateShort(applied.fromDate)} — ${fmtDateShort(applied.toDate)}`,
+      orientation: "landscape",
+      branch,
+      meta: [
+        { label: "Branch", value: branch ? branch.name : "All Branches" },
+        { label: "Status", value: applied.status || "All" },
+        { label: "Shipment Type", value: applied.shipmentType || "All" },
+        { label: "ODA / Regular", value: applied.oda || "All" },
+        { label: "Client", value: applied.client || "All" },
+      ],
+      columns: ["sl", "awb", "bookingDate", "consignor", "consignee", "destination", "shipmentType", "oda", "status", "pieces", "weight", "freight", "gst"],
+      rows: filtered,
+      totals: [
+        { col: "pieces", value: totals.pieces },
+        { col: "weight", value: totals.weight.toFixed(1) },
+        { col: "freight", value: currency(totals.revenue) },
+        { col: "gst", value: currency(totals.gst) },
+      ],
+    });
+  }
+
+  const SortTh = ({ label, sortField, ...rest }) => (
+    <th {...rest} onClick={() => toggleSort(sortField)} style={{ cursor: "pointer", userSelect: "none", ...(rest.style || {}) }}>
+      {label} {sortKey === sortField ? (sortDir === "asc" ? "▲" : "▼") : ""}
+    </th>
+  );
+
   return (
     <div className="glide-in" style={{ display: "grid", gap: 16 }}>
-      <div className="mcl-card" style={{ padding: 20 }}>
+      <div className="mcl-card mis-filterbar" style={{ padding: 20, position: "sticky", top: 0, zIndex: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, fontWeight: 700 }}><FileText size={16} color="var(--brand)" /> MIS Report</div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
-          <div><label className="lb">From date</label><input className="in" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} /></div>
-          <div><label className="lb">To date</label><input className="in" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} /></div>
-          <div style={{ minWidth: 160 }}><label className="lb">Client</label><input className="in" value={client} onChange={(e) => setClient(e.target.value)} placeholder="Client / account name" /></div>
+          <div><label className="lb">From date</label><input className="in" type="date" value={draft.fromDate} onChange={(e) => setDraft((d) => ({ ...d, fromDate: e.target.value }))} /></div>
+          <div><label className="lb">To date</label><input className="in" type="date" value={draft.toDate} onChange={(e) => setDraft((d) => ({ ...d, toDate: e.target.value }))} /></div>
+          <div><label className="lb">Branch</label>
+            <select className="in" value={draft.branchId} onChange={(e) => setDraft((d) => ({ ...d, branchId: e.target.value }))}>
+              <option value="">All Branches</option>
+              {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          </div>
+          <div style={{ minWidth: 150 }}><label className="lb">Client</label><input className="in" value={draft.client} onChange={(e) => setDraft((d) => ({ ...d, client: e.target.value }))} placeholder="Client / consignor" /></div>
+          <div><label className="lb">Status</label>
+            <select className="in" value={draft.status} onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value }))}>
+              <option value="">All</option>
+              {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div><label className="lb">Shipment Type</label>
+            <select className="in" value={draft.shipmentType} onChange={(e) => setDraft((d) => ({ ...d, shipmentType: e.target.value }))}>
+              <option value="">All</option>
+              {SHIPMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div><label className="lb">ODA / Regular</label>
+            <select className="in" value={draft.oda} onChange={(e) => setDraft((d) => ({ ...d, oda: e.target.value }))}>
+              <option value="">All</option>
+              <option value="ODA">ODA</option>
+              <option value="Regular">Regular</option>
+            </select>
+          </div>
           <button className="btn btn-primary btn-sm" onClick={search}><Search size={14} /> Search</button>
-          <button className="btn btn-dark btn-sm" onClick={exportReport} disabled={filtered.length === 0}><FileSpreadsheet size={14} /> Export</button>
           <button className="btn btn-dark btn-sm" onClick={reset}><RefreshCcw size={14} /> Reset</button>
+          <div style={{ flex: 1 }} />
+          <div style={{ minWidth: 180 }}><input className="in" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder="Search this report…" /></div>
+          <button className="btn btn-dark btn-sm" onClick={exportExcel} disabled={filtered.length === 0}><FileSpreadsheet size={14} /> Export Excel</button>
+          <button className="btn btn-dark btn-sm" onClick={exportPdf} disabled={filtered.length === 0}><Printer size={14} /> Export PDF</button>
         </div>
       </div>
 
-      <div className="mcl-card" style={{ padding: filtered.length ? 0 : 40, overflowX: "auto" }}>
+      <div className="mcl-card" style={{ padding: 0, display: "flex", flexWrap: "wrap", gap: 0, overflow: "hidden" }}>
+        {[
+          ["Revenue", currency(totals.revenue), "var(--green)"],
+          ["GST", currency(totals.gst), "var(--gold)"],
+          ["Weight", `${totals.weight.toFixed(1)} Kg`, "var(--brand)"],
+          ["Pieces", totals.pieces, "var(--blue)"],
+        ].map(([label, val, color]) => (
+          <div key={label} style={{ flex: "1 1 160px", padding: "16px 20px", borderRight: "1px solid var(--line)" }}>
+            <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>{label}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color, marginTop: 4 }}>{val}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mcl-card mis-table-wrap" style={{ padding: filtered.length ? 0 : 40, overflow: "auto", maxHeight: "62vh" }}>
         {filtered.length === 0 ? (
           <div style={{ textAlign: "center", color: "var(--muted)" }}>
             <Boxes size={26} style={{ opacity: .5, margin: "0 auto 8px" }} />
-            No shipments match this date range / client filter.
+            No shipments match this filter combination.
           </div>
         ) : (
           <table className="mcl-table">
             <thead>
               <tr>
-                <th>Awb No</th><th>Booking Date</th><th>Client</th><th>Consignor</th><th>Consignee</th>
-                <th>Origin</th><th>Current Station</th><th>Status</th><th>ODA</th><th>Type</th>
-                <th>On Time/Delay</th><th>Delay (days)</th><th>Forwarder</th><th>PO No</th>
+                <SortTh label="AWB" sortField="awb" />
+                <SortTh label="Booking Date" sortField="createdAt" />
+                <th>Client</th>
+                <SortTh label="Consignee" sortField="consignee" />
+                <th>Branch</th>
+                <th>Type</th>
+                <th>ODA</th>
+                <SortTh label="Status" sortField="status" />
+                <SortTh label="Weight" sortField="weight" style={{ textAlign: "right" }} />
+                <SortTh label="Revenue" sortField="freight" style={{ textAlign: "right" }} />
+                <th style={{ textAlign: "right" }}>GST</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.slice(0, 80).map((b) => {
-                const ot = onTimeStatus(b);
-                const dd = delayDays(b);
-                return (
-                  <tr key={b.awb}>
-                    <td className="font-mono">{b.awb}</td>
-                    <td style={{ fontSize: 12, color: "var(--muted)" }}>{fmtDateShort(b.createdAt)}</td>
-                    <td>{b.clientAccount}</td>
-                    <td>{b.consignorName}<div style={{ fontSize: 11, color: "var(--muted)" }}>{b.consignorCity}</div></td>
-                    <td>{b.consigneeName}<div style={{ fontSize: 11, color: "var(--muted)" }}>{b.consigneeCity}</div></td>
-                    <td>{b.branchName}</td>
-                    <td>{currentStation(b)}</td>
-                    <td><StatusBadge status={b.status} /></td>
-                    <td>{b.oda === "ODA" ? <span className="badge" style={{ color: "var(--gold)", background: "rgba(255,176,32,.14)" }}>ODA</span> : <span style={{ fontSize: 12, color: "var(--muted)" }}>Regular</span>}</td>
-                    <td style={{ fontSize: 12.5 }}>{b.shipmentType}</td>
-                    <td style={{ color: ot === "Delay" ? "var(--red)" : ot === "On Time" ? "var(--green)" : "var(--muted)", fontWeight: 600 }}>{ot}</td>
-                    <td>{dd > 0 ? dd : "—"}</td>
-                    <td style={{ fontSize: 12 }}>{b.forwarderName || "—"}</td>
-                    <td style={{ fontSize: 12 }}>{b.poNumber || "—"}</td>
-                  </tr>
-                );
-              })}
+              {pageRows.map((b) => (
+                <tr key={b.awb}>
+                  <td className="font-mono">{b.awb}</td>
+                  <td style={{ fontSize: 12, color: "var(--muted)" }}>{fmtDateShort(b.createdAt)}</td>
+                  <td>{b.clientAccount || b.consignorName}</td>
+                  <td>{b.consigneeName}<div style={{ fontSize: 11, color: "var(--muted)" }}>{b.consigneeCity}</div></td>
+                  <td style={{ fontSize: 12.5 }}>{b.branchName || "—"}</td>
+                  <td style={{ fontSize: 12.5 }}>{b.shipmentType}</td>
+                  <td>{(b.oda || "Regular") === "ODA" ? <span className="badge" style={{ color: "var(--gold)", background: "rgba(255,176,32,.14)" }}>ODA</span> : <span style={{ fontSize: 12, color: "var(--muted)" }}>Regular</span>}</td>
+                  <td><StatusBadge status={b.status} /></td>
+                  <td style={{ textAlign: "right" }}>{Number(b.weight || 0).toFixed(1)}</td>
+                  <td style={{ textAlign: "right" }}>{currency(freightAmount(b))}</td>
+                  <td style={{ textAlign: "right" }}>{b.gstPercent ? currency(gstAmountFor(b)) : "—"}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
-        {filtered.length > 80 && <div style={{ padding: "10px 16px", fontSize: 11.5, color: "var(--muted)" }}>Showing 80 of {filtered.length} — export to Excel for the complete report with every MIS column.</div>}
       </div>
+
+      {filtered.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 12.5, color: "var(--muted)" }}>
+            Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} of {filtered.length}
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn btn-dark btn-sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Prev</button>
+            <div style={{ fontSize: 12.5, color: "var(--muted)", display: "flex", alignItems: "center", padding: "0 6px" }}>Page {page} of {totalPages}</div>
+            <button className="btn btn-dark btn-sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Next</button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        .mis-filterbar{ background:var(--ink); }
+        .mis-table-wrap thead{ position:sticky; top:0; z-index:10; background:var(--ink2, #0d1220); }
+        .mis-table-wrap table.mcl-table th{ background:var(--ink2, #0d1220); }
+      `}</style>
     </div>
   );
 }
@@ -2431,7 +2979,7 @@ function IncomingTodayPanel({ bookings, branches, isAdmin, onUpdateStatus, notif
 
   return (
     <div className="glide-in" style={{ display: "grid", gap: 16 }}>
-      <div className="mcl-card" style={{ padding: 20 }}>
+      <div className="mcl-card" style={{ padding: 22 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
           <div>
             <div style={{ fontWeight: 700 }}>Incoming parcels {isAdmin ? "— all destination branches" : "for your branch"}</div>
@@ -2447,7 +2995,7 @@ function IncomingTodayPanel({ bookings, branches, isAdmin, onUpdateStatus, notif
       </div>
 
       {rows.length === 0 ? (
-        <div className="mcl-card" style={{ padding: 32, textAlign: "center", color: "var(--muted)" }}>
+        <div className="mcl-card" style={{ padding: 22, textAlign: "center", color: "var(--muted)" }}>
           <Boxes size={26} style={{ marginBottom: 8, opacity: .5 }} />
           <div>No incoming parcels {filter === "today" ? "expected today" : "right now"}.</div>
         </div>
@@ -2494,7 +3042,92 @@ function IncomingTodayPanel({ bookings, branches, isAdmin, onUpdateStatus, notif
 
 /* ============================= ADMIN SHELL ============================= */
 
-function AdminPanel({ bookings, onSaveBooking, onUpdateStatus, onPrint, onDelete, notify, customers, onCreateManifest, onPrintManifest, currentUser, branches, existingAwbs, onAddBranch, onUpdateBranch, onDeleteBranch }) {
+/* ============================= PRINT CENTER ============================= */
+
+function PrintCenterPanel({ bookings, branches, isAdmin, currentUser, onPrintReport, notify }) {
+  const activeBranches = branches.filter((b) => b.active);
+  const defaultBranchId = isAdmin ? (activeBranches[0] && activeBranches[0].id) : currentUser.branchId;
+  const [typeId, setTypeId] = useState(REPORT_TYPES[0].id);
+  const [branchId, setBranchId] = useState(defaultBranchId || "");
+  const [toBranchId, setToBranchId] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [vehicle, setVehicle] = useState("");
+  const [driver, setDriver] = useState("");
+
+  const type = REPORT_TYPES.find((t) => t.id === typeId);
+  const branch = branches.find((b) => b.id === branchId);
+  const toBranch = branches.find((b) => b.id === toBranchId);
+  const needsToBranch = typeId === "hub-transfer";
+  const needsVehicle = typeId === "vehicle-loading" || typeId === "delivery-run";
+
+  function generate() {
+    if (!branch) { notify({ title: "Pick a branch", msg: "A branch is required for this report", color: "var(--red)" }); return; }
+    if (needsToBranch && !toBranch) { notify({ title: "Pick a destination hub", msg: "Hub transfer needs both branches", color: "var(--red)" }); return; }
+    const ctx = { branch, fromBranch: branch, toBranch, date: new Date(date).toISOString(), vehicle, driver, rider: driver };
+    const config = type.build(bookings, ctx);
+    onPrintReport(config);
+  }
+
+  return (
+    <div className="glide-in" style={{ display: "grid", gap: 16 }}>
+      <div className="mcl-card" style={{ padding: 22 }}>
+        <div style={{ fontWeight: 700, marginBottom: 4 }}>Print Center</div>
+        <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 16 }}>
+          Generate any operational report straight from your live booking data — every report shares the same pixel-perfect A4 layout engine as the consignment note and dispatch sheet.
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div>
+            <label className="lb">Report type</label>
+            <select className="in" value={typeId} onChange={(e) => setTypeId(e.target.value)}>
+              {REPORT_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="lb">Date</label>
+            <input className="in" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+
+          <div>
+            <label className="lb">{needsToBranch ? "From hub / branch" : "Branch"}</label>
+            <select className="in" value={branchId} onChange={(e) => setBranchId(e.target.value)} disabled={!isAdmin}>
+              {activeBranches.map((b) => <option key={b.id} value={b.id}>{b.name} ({b.id})</option>)}
+            </select>
+          </div>
+          {needsToBranch && (
+            <div>
+              <label className="lb">To hub / branch</label>
+              <select className="in" value={toBranchId} onChange={(e) => setToBranchId(e.target.value)}>
+                <option value="">Select destination branch</option>
+                {activeBranches.filter((b) => b.id !== branchId).map((b) => <option key={b.id} value={b.id}>{b.name} ({b.id})</option>)}
+              </select>
+            </div>
+          )}
+
+          {needsVehicle && (
+            <>
+              <div>
+                <label className="lb">Vehicle No.</label>
+                <input className="in" value={vehicle} onChange={(e) => setVehicle(e.target.value)} placeholder="TN33AB1234" />
+              </div>
+              <div>
+                <label className="lb">{typeId === "delivery-run" ? "Rider name" : "Driver name"}</label>
+                <input className="in" value={driver} onChange={(e) => setDriver(e.target.value)} placeholder="Name" />
+              </div>
+            </>
+          )}
+        </div>
+
+        <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={generate}><Printer size={14} /> Generate &amp; Print</button>
+        <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 10 }}>
+          Looking for the <b>Dispatch Sheet</b> (per-vehicle waybill manifest)? That one's built from an actual created manifest, not a date filter — print or reprint it from the <b>Manifest</b> tab.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminPanel({ bookings, onSaveBooking, onUpdateStatus, onPrint, onDelete, notify, customers, onCreateManifest, onPrintManifest, onPrintReport, currentUser, branches, existingAwbs, onAddBranch, onUpdateBranch, onDeleteBranch }) {
   const isAdmin = currentUser.role === "admin";
   const [tab, setTab] = useState("overview");
   const scopedBookings = isAdmin ? bookings : bookings.filter((b) => b.branchId === currentUser.branchId);
@@ -2535,6 +3168,7 @@ function AdminPanel({ bookings, onSaveBooking, onUpdateStatus, onPrint, onDelete
             <Boxes size={15} /> Incoming {incomingCount > 0 && <span className="badge" style={{ marginLeft: 4, color: "var(--gold)", background: "rgba(255,176,32,.16)" }}>{incomingCount}</span>}
           </div>
           <div className={`tab-btn ${tab === "manifest" ? "active" : ""}`} onClick={() => setTab("manifest")}><Truck size={15} /> Manifest</div>
+          <div className={`tab-btn ${tab === "print-center" ? "active" : ""}`} onClick={() => setTab("print-center")}><Printer size={15} /> Print Center</div>
           <div className={`tab-btn ${tab === "reports" ? "active" : ""}`} onClick={() => setTab("reports")}><FileText size={15} /> Reports</div>
           <div className={`tab-btn ${tab === "misreport" ? "active" : ""}`} onClick={() => setTab("misreport")}><FileText size={15} /> MIS Report</div>
           {isAdmin && <div className={`tab-btn ${tab === "mis" ? "active" : ""}`} onClick={() => setTab("mis")}><BarChart3 size={15} /> MIS</div>}
@@ -2551,8 +3185,9 @@ function AdminPanel({ bookings, onSaveBooking, onUpdateStatus, onPrint, onDelete
         {tab === "all" && <BookingsTable bookings={scopedBookings} onUpdateStatus={onUpdateStatus} onPrint={onPrint} onDelete={onDelete} notify={notify} />}
         {tab === "incoming" && <IncomingTodayPanel bookings={incomingBookings} branches={branches} isAdmin={isAdmin} onUpdateStatus={onUpdateStatus} notify={notify} />}
         {tab === "manifest" && <ManifestPanel bookings={scopedBookings} onCreateManifest={onCreateManifest} onPrintManifest={onPrintManifest} notify={notify} branches={branches} currentUser={currentUser} />}
+        {tab === "print-center" && <PrintCenterPanel bookings={bookings} branches={branches} isAdmin={isAdmin} currentUser={currentUser} onPrintReport={onPrintReport} onPrintManifest={onPrintManifest} notify={notify} />}
         {tab === "reports" && <ReportsPanel bookings={scopedBookings} onUpdateStatus={onUpdateStatus} notify={notify} />}
-        {tab === "misreport" && <MISReportPanel bookings={scopedBookings} notify={notify} />}
+        {tab === "misreport" && <MISReportPanel bookings={scopedBookings} branches={branches} onPrintReport={onPrintReport} notify={notify} />}
         {tab === "mis" && isAdmin && <MISPanel bookings={bookings} branches={branches} notify={notify} />}
         {tab === "branches" && isAdmin && <BranchManagement branches={branches} onAdd={onAddBranch} onUpdate={onUpdateBranch} onDelete={onDeleteBranch} notify={notify} />}
         {tab === "places" && isAdmin && <ServicePlacesAdmin notify={notify} />}
@@ -2572,6 +3207,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [printTarget, setPrintTarget] = useState(null);
   const [printManifest, setPrintManifest] = useState(null);
+  const [printReport, setPrintReport] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [lastSynced, setLastSynced] = useState(null);
@@ -2809,7 +3445,7 @@ export default function App() {
       <GlobalStyle />
       <div className="aurora"><span className="a1" /><span className="a2" /><span className="a3" /></div>
       <div className="grid-veil" />
-      <div className="content-layer">
+      <div className="content-layer no-print">
         <Nav view={view} setView={setView} adminLoggedIn={!!currentUser} onLogout={() => setCurrentUser(null)} syncing={syncing} lastSynced={lastSynced} onRefresh={manualRefresh} />
 
         {!loaded ? (
@@ -2824,7 +3460,7 @@ export default function App() {
             {view === "track" && <TrackView bookings={bookings} onPrint={setPrintTarget} />}
             {view === "admin" && (
               currentUser
-                ? <AdminPanel bookings={bookings} onSaveBooking={handleSaveBooking} onUpdateStatus={handleUpdateStatus} onPrint={setPrintTarget} onDelete={handleDelete} notify={notify} customers={customers} onCreateManifest={handleCreateManifest} onPrintManifest={setPrintManifest} currentUser={currentUser} branches={branches} existingAwbs={existingAwbs} onAddBranch={handleAddBranch} onUpdateBranch={handleUpdateBranch} onDeleteBranch={handleDeleteBranch} />
+                ? <AdminPanel bookings={bookings} onSaveBooking={handleSaveBooking} onUpdateStatus={handleUpdateStatus} onPrint={setPrintTarget} onDelete={handleDelete} notify={notify} customers={customers} onCreateManifest={handleCreateManifest} onPrintManifest={setPrintManifest} onPrintReport={setPrintReport} currentUser={currentUser} branches={branches} existingAwbs={existingAwbs} onAddBranch={handleAddBranch} onUpdateBranch={handleUpdateBranch} onDeleteBranch={handleDeleteBranch} />
                 : <LoginScreen onLogin={setCurrentUser} branches={branches} />
             )}
           </div>
@@ -2833,6 +3469,7 @@ export default function App() {
 
       {printTarget && <PrintableWaybill booking={printTarget} onClose={() => setPrintTarget(null)} branches={branches} />}
       {printManifest && <PrintableManifest manifest={printManifest} onClose={() => setPrintManifest(null)} />}
+      {printReport && <PrintableReport config={printReport} onClose={() => setPrintReport(null)} />}
       <ToastHost toasts={toasts} remove={() => {}} />
     </div>
   );
